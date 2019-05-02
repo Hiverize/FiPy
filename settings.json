@@ -3,9 +3,9 @@
 
         "wlan": {
             "enabled": true,
-            "ssid": "FooBar",
+            "ssid": "hiverize",
             "encryption": 3,
-            "password": "secret",
+            "password": "bienenprojekt",
             "timeout": 1000,
             "ifconfig": "dhcp"
         },
@@ -28,13 +28,13 @@
     "telemetry": {
         "beep": {
             "enabled": true,
-            "server": "http://bobserver.informatik.uni-bremen.de",
+            "server": "https://bee-observer.org",
             "sensor_key": ""
         },
     },
     "sensors": {
         "ds1820": {
-            "enabled": true,
+            "enabled": false,
             "pin": "P11",
             "positions": {
                 "t_i_1": "",
@@ -57,5 +57,8 @@
             "pin_sda": "P9",
             "pin_scl": "P10",
         }
+    },
+    "general": {
+      "initial_time": 1556805688.261163,
     }
 }

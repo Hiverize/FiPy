@@ -19,6 +19,8 @@ if 'sensors' in _config.data.keys():
         ow.scan()
         time.sleep_ms(100)
         ds1820 = sensors.ds18x20.DS18X20(ow)
+    else:
+        ds1820 = None
 
     _hx_config =  _config.data['sensors'].get('hx711', {})
     if _hx_config.get('enabled', False):
@@ -26,11 +28,18 @@ if 'sensors' in _config.data.keys():
             _hx_config['pin_dout'],
             _hx_config['pin_pdsck']
         )
+    else:
+        hx711 = None
 
     _bme_config = _config.data['sensors'].get('bme280', {})
     if _bme_config.get('enabled', False):
-        i2c = I2C(0, I2C.MASTER, pins=(
-            _bme_config['pin_sda'],
-            _bme_config['pin_scl']
-        ))
-        bme280 = sensors.bme280.BME280(address=0x77, i2c=i2c)
+        try:
+            i2c = I2C(0, I2C.MASTER, pins=(
+                _bme_config['pin_sda'],
+                _bme_config['pin_scl']
+            ))
+            bme280 = sensors.bme280.BME280(address=0x77, i2c=i2c)
+        except:
+            print("BME280 not Initialised")
+    else:
+        bme280 = None

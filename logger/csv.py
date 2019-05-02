@@ -41,3 +41,28 @@ class CSV_logger:
         f = open(file_path, 'a')
         f.write("{}, {}, {}\n".format(full_time_string, sensor, value))
         f.close()
+
+    def add_dict(self, data):
+        # Get Time
+        write_time = time.time()
+        time_list = time.localtime(write_time)
+        time_string = "{}-{}-{}H{}".format(time_list[0], time_list[1], time_list[2], time_list[3])
+        # Get full timestamp
+        full_time_string = "{}-{}-{} {}:{}:{}".format(*time_list[0:6])
+        # combine dict entries
+        data_list = ["{},{},{}\n".format(full_time_string, key, value) for key, value in data.items()]
+        # concat filepath
+        file_path = self.dir + "/abc" +time_string + ".csv"
+        # Write header, if file did not exist before
+        try:
+            f = open(file_path, 'r')
+            f.close()
+        except OSError:
+            f = open(file_path, 'w')
+            f.write('Time, Sensor, Value\n')
+            f.close()
+            print("Logging measurements to " +file_path)
+        # Append Value
+        with open(file_path, 'a') as f:
+            f.write("".join(data_list))
+        print("wrote lines to csv")

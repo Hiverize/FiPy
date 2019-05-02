@@ -28,30 +28,41 @@ def start_measurement():
     # Start CSV logger on SD
     # Pins are Dat0: P8, SCLK: P23, CMD: P4, at least I think so
     # Apparently Pins can not be changed, when using the SD module
-    # csv_logger = logger.csv.CSV_logger()
-    print(_config.data['sensors']['hx711'].get('calibration_factor', 1))
-    print(_config.data['sensors']['hx711'].get('tare_offset', 0))
-    hx711.set_scale(_config.data['sensors']['hx711'].get('calibration_factor', 1))
-    hx711.set_offset(_config.data['sensors']['hx711'].get('tare_offset', 0))
+    csv_logger = logger.csv.CSV_logger()
+    if _config.data['sensors']['hx711']['enabled']:
+        print(_config.data['sensors']['hx711'].get('calibration_factor', 1))
+        print(_config.data['sensors']['hx711'].get('tare_offset', 0))
+        hx711.set_scale(_config.data['sensors']['hx711'].get('calibration_factor', 1))
+        hx711.set_offset(_config.data['sensors']['hx711'].get('tare_offset', 0))
     loop_run = True
     while loop_run:
         pycom.rgbled(0x001100)
         perf.start()
         data = {}
-        for rom in ds1820.roms:
-            ds1820.start_conversion(rom=rom)
-        time.sleep_ms(750)
-        for rom in ds1820.roms:
-            ds_measurement = ds1820.read_temp_async(rom=rom)
-            ds_name = binascii.hexlify(rom).decode('utf-8')
-            if ds_name in _ds_positions:
-                data[_ds_positions[ds_name]] = ds_measurement
-        (data['t'],
-        data['p'],
-        data['h']) = bme280.read_compensated_data()
-        data['p'] = data['p']/100 # Pa to mBar
-        data['weight_kg'] = hx711.get_value(times=5)
+        if _config.data['sensors']['ds1820']['enabled']:
+            for rom in ds1820.roms:
+                ds1820.start_conversion(rom=rom)
+            time.sleep_ms(750)
+            for rom in ds1820.roms:
+                try:
+                    ds_measurement = ds1820.read_temp_async(rom=rom)
+                    ds_name = binascii.hexlify(rom).decode('utf-8')
+                    if ds_name in _ds_positions:
+                        data[_ds_positions[ds_name]] = ds_measurement
+                except:
+                    print("Did not find rom")
+        if _config.data['sensors']['bme280']['enabled']:
+            try:
+                (data['t'],
+                data['p'],
+                data['h']) = bme280.read_compensated_data()
+                data['p'] = data['p']/100 # Pa to mBar
+            except:
+                print("BME280 not measuring")
+        if _config.data['sensors']['hx711']['enabled']:
+            data['weight_kg'] = hx711.get_value(times=5)
         perf.stop()
+        csv_logger.add_dict(data)
         if _wlan.mode() == network.WLAN.STA and _wlan.isconnected():
             _beep.add(data)
             print(data)
