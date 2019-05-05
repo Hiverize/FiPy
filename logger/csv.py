@@ -23,8 +23,8 @@ class CSV_logger:
         # Get Time
         write_time = time.time()
         datetime_list = time.localtime(write_time)
-        date_string = "{}-{}-{}H{}".format(*datetime_list[0:4])
-        datetime_string = "{}-{}-{} {}:{}:{}".format(*datetime_list[0:6])
+        date_string = "{:4d}-{:02d}-{:02d}H{:02d}".format(*datetime_list[0:4])
+        datetime_string = "{:4d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(*datetime_list[0:6])
         return date_string, datetime_string
 
     def add(self, sensor, value):
