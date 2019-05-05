@@ -21,10 +21,14 @@ _config = Config()
 _ds_config = _config.data['sensors']['ds1820']
 _ds_positions = {v: k for k, v in _ds_config['positions'].items()}
 
+loop_run = True
+
+print("Starting main...")
+
 def start_measurement():
 
     perf = Timer.Chrono()
-    global _wlan
+    global _wlan, loop_run
     # Start CSV logger on SD
     # Pins are Dat0: P8, SCLK: P23, CMD: P4, at least I think so
     # Apparently Pins can not be changed, when using the SD module
@@ -65,19 +69,36 @@ def start_measurement():
         csv_logger.add_dict(data)
         if _wlan.mode() == network.WLAN.STA and _wlan.isconnected():
             _beep.add(data)
-            print(data)
-            print('Seconds elapsed: {:.4f}'.format(perf.read()))
-            perf.reset()
-            time.sleep(5)
+        print(data)
+        print('Seconds elapsed: {:.4f}'.format(perf.read()))
+        perf.reset()
+        time.sleep(5)
+
+wm = WLanManager()
+
+def enable_ap(pin=None):
+    global wm, loop_run
+    webserver.mws.Start(threaded=True)
+    loop_run = False
+    getattr(wm, 'enable_ap')()
+
+button_s1 = machine.Pin('P10',
+                        mode=machine.Pin.IN,
+                        pull=machine.Pin.PULL_UP)
+button_s1.callback(machine.Pin.IRQ_RISING,
+                   handler=enable_ap)
+
+print("Starting...")
+if _config.data['networking']['wlan']['enabled']:
+    wm.enable_client()
+    if _wlan.mode() == network.WLAN.STA and _wlan.isconnected():
+        _beep = logger.beep
+        start_measurement()
+    else:
+        if _config.data['networking']['accesspoint']['enabled']:
+            enable_ap()
         else:
-            loop_run = False
-
-if _wlan.mode() == network.WLAN.STA and _wlan.isconnected():
-    _beep = logger.beep
-    start_measurement()
+            start_measurement()
 else:
-    wm = WLanManager()
-    wm.enable_ap()
+    start_measurement()
 
-pycom.rgbled(0x111100)
-webserver.mws.Start(threaded=True)
