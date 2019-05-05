@@ -15,15 +15,18 @@ if 'sensors' in _config.data.keys():
     if _ds_config.get('enabled', False):
         ow = onewire.OneWire(
             Pin(_ds_config['pin']))
+        ds1820 = sensors.ds18x20.DS18X20(ow)
         i = 0
-        while (i < 3 and not ow.roms):
-            time.sleep(100)
-            ow.scan()
+        while (i < 3 and not ds1820.roms):
+            time.sleep_ms(100)
+            ds1820.__init__(ow)
             time.sleep_ms(400)
             i += 1
-        if not ow.roms:
+        if not ds1820.roms:
             print("No DS1820 found. Is it connected properly?")
-        ds1820 = sensors.ds18x20.DS18X20(ow)
+        else:
+            print("Found {} DS1820.".format(len(ds1820.roms)))
+        
     else:
         ds1820 = None
 
@@ -45,6 +48,7 @@ if 'sensors' in _config.data.keys():
             ))
             bme280 = sensors.bme280.BME280(address=0x77, i2c=i2c)
         except:
+            bme280 = None
             print("BME280 initialization failed. Is it connected properly?")
     else:
         bme280 = None
