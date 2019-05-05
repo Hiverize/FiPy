@@ -22,7 +22,7 @@ if 'sensors' in _config.data.keys():
             time.sleep_ms(400)
             i += 1
         if not ow.roms:
-            print("No DS1820 found.")
+            print("No DS1820 found. Is it connected properly?")
         ds1820 = sensors.ds18x20.DS18X20(ow)
     else:
         ds1820 = None
@@ -45,6 +45,6 @@ if 'sensors' in _config.data.keys():
             ))
             bme280 = sensors.bme280.BME280(address=0x77, i2c=i2c)
         except:
-            print("BME280 not Initialised")
+            print("BME280 initialization failed. Is it connected properly?")
     else:
         bme280 = None
