@@ -10,6 +10,7 @@ class CSV_logger:
         # Apparently Pins can not be changed
         sd = SD()
         os.mount(sd, '/sd')
+        
         # Check if directory, eg. hiverizelog, was already created,
         # and create it, if not existing:
         try:
@@ -18,12 +19,16 @@ class CSV_logger:
             os.mkdir(dir)
         print("Initialised CSV logger in directory " +dir)
 
-
-    def add(self, sensor, value):
+    def get_time_string(self):
         # Get Time
         write_time = time.time()
-        time_list = time.localtime(write_time)
-        time_string = "{}-{}-{}H{}".format(time_list[0], time_list[1], time_list[2], time_list[3])
+        datetime_list = time.localtime(write_time)
+        date_string = "{}-{}-{}H{}".format(*datetime_list[0:4])
+        datetime_string = "{}-{}-{} {}:{}:{}".format(*datetime_list[0:6])
+        return date_string, datetime_string
+
+    def add(self, sensor, value):
+        time_string, full_time_string = self.get_time_string()
         # concat filepath
         file_path = self.dir + "/" +time_string + ".csv"
         # Write header, if file did not exist before
@@ -36,7 +41,7 @@ class CSV_logger:
             f.close()
             print("Logging measurements to " +file_path)
         # Get full timestamp
-        full_time_string = "{}-{}-{} {}:{}:{}".format(*time_list[0:6])
+        
         # Append Value
         f = open(file_path, 'a')
         f.write("{}, {}, {}\n".format(full_time_string, sensor, value))
@@ -44,15 +49,11 @@ class CSV_logger:
 
     def add_dict(self, data):
         # Get Time
-        write_time = time.time()
-        time_list = time.localtime(write_time)
-        time_string = "{}-{}-{}H{}".format(time_list[0], time_list[1], time_list[2], time_list[3])
-        # Get full timestamp
-        full_time_string = "{}-{}-{} {}:{}:{}".format(*time_list[0:6])
+        time_string, full_time_string = self.get_time_string()
         # combine dict entries
         data_list = ["{},{},{}\n".format(full_time_string, key, value) for key, value in data.items()]
         # concat filepath
-        file_path = self.dir + "/abc" +time_string + ".csv"
+        file_path = self.dir + "/" +time_string + ".csv"
         # Write header, if file did not exist before
         try:
             f = open(file_path, 'r')
@@ -65,4 +66,4 @@ class CSV_logger:
         # Append Value
         with open(file_path, 'a') as f:
             f.write("".join(data_list))
-        print("wrote lines to csv")
+        print("Wrote {} lines to csv at {}".format(len(data_list), full_time_string))
