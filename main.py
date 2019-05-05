@@ -1,5 +1,5 @@
 import time
-from machine import Timer
+from machine import Timer, RTC
 import machine
 import binascii
 import uos
@@ -12,38 +12,26 @@ import webserver
 from wlanmanager import WLanManager
 
 from config import Config
-import logger.csv
-
-_wlan = network.WLAN(id=0)
 
 _config = Config()
+
+_wlan = network.WLAN(id=0)
 
 _ds_config = _config.data['sensors']['ds1820']
 _ds_positions = {v: k for k, v in _ds_config['positions'].items()}
 
 loop_run = True
 
-print("Starting main...")
-
 def start_measurement():
-
     perf = Timer.Chrono()
-    global _wlan, loop_run
-    # Start CSV logger on SD
-    # Pins are Dat0: P8, SCLK: P23, CMD: P4, at least I think so
-    # Apparently Pins can not be changed, when using the SD module
-    csv_logger = logger.csv.CSV_logger()
-    if _config.data['sensors']['hx711']['enabled']:
-        print(_config.data['sensors']['hx711'].get('calibration_factor', 1))
-        print(_config.data['sensors']['hx711'].get('tare_offset', 0))
-        hx711.set_scale(_config.data['sensors']['hx711'].get('calibration_factor', 1))
-        hx711.set_offset(_config.data['sensors']['hx711'].get('tare_offset', 0))
-    loop_run = True
+    global loop_run
+
     while loop_run:
         pycom.rgbled(0x001100)
         perf.start()
+        # Measure all enabled sensors
         data = {}
-        if _config.data['sensors']['ds1820']['enabled']:
+        if ds1820 is not None:
             for rom in ds1820.roms:
                 ds1820.start_conversion(rom=rom)
             time.sleep_ms(750)
@@ -55,32 +43,36 @@ def start_measurement():
                         data[_ds_positions[ds_name]] = ds_measurement
                 except:
                     print("Did not find rom")
-        if _config.data['sensors']['bme280']['enabled']:
+        if bme280 is not None:
             try:
                 (data['t'],
                 data['p'],
                 data['h']) = bme280.read_compensated_data()
                 data['p'] = data['p']/100 # Pa to mBar
             except:
-                print("BME280 not measuring")
-        if _config.data['sensors']['hx711']['enabled']:
+                print("BME280 not measuring.")
+        if hx711 is not None:
             data['weight_kg'] = hx711.get_value(times=5)
         perf.stop()
-        csv_logger.add_dict(data)
-        if _wlan.mode() == network.WLAN.STA and _wlan.isconnected():
+
+        # Log measured values
+        if _csv is not None:
+            _csv.add_dict(data)
+        if _wlan.mode() == network.WLAN.STA and _wlan.isconnected() and _beep is not None:
             _beep.add(data)
         print(data)
         print('Seconds elapsed: {:.4f}'.format(perf.read()))
         perf.reset()
         time.sleep(5)
 
-wm = WLanManager()
+
+_wm = WLanManager()
 
 def enable_ap(pin=None):
-    global wm, loop_run
+    global _wm, loop_run
     webserver.mws.Start(threaded=True)
     loop_run = False
-    getattr(wm, 'enable_ap')()
+    getattr(_wm, 'enable_ap')()
 
 button_s1 = machine.Pin('P10',
                         mode=machine.Pin.IN,
@@ -88,17 +80,25 @@ button_s1 = machine.Pin('P10',
 button_s1.callback(machine.Pin.IRQ_RISING,
                    handler=enable_ap)
 
+
+rtc = RTC()
+rtc.init(time.gmtime(_config.data['general']['general']['initial_time']//1000))
+
+_csv  = logger.csv
 print("Starting...")
 if _config.data['networking']['wlan']['enabled']:
-    wm.enable_client()
+    _wm.enable_client()
     if _wlan.mode() == network.WLAN.STA and _wlan.isconnected():
+        try:
+            rtc.ntp_sync("pool.ntp.org")
+        except:
+            pass
         _beep = logger.beep
         start_measurement()
     else:
-        if _config.data['networking']['accesspoint']['enabled']:
+        if _config.data['networking']['accesspoint']['enabled'] or _csv is None:
             enable_ap()
         else:
             start_measurement()
 else:
     start_measurement()
-
