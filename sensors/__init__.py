@@ -36,6 +36,8 @@ if 'sensors' in _config.data.keys():
             _hx_config['pin_dout'],
             _hx_config['pin_pdsck']
         )
+        hx711.set_scale(_config.data['sensors']['hx711'].get('calibration_factor', 1))
+        hx711.set_offset(_config.data['sensors']['hx711'].get('tare_offset', 0))
     else:
         hx711 = None
 
