@@ -15,9 +15,14 @@ if 'sensors' in _config.data.keys():
     if _ds_config.get('enabled', False):
         ow = onewire.OneWire(
             Pin(_ds_config['pin']))
-        time.sleep_ms(100)
-        ow.scan()
-        time.sleep_ms(100)
+        i = 0
+        while (i < 3 and not ow.roms):
+            time.sleep(100)
+            ow.scan()
+            time.sleep_ms(400)
+            i += 1
+        if not ow.roms:
+            print("No DS1820 found.")
         ds1820 = sensors.ds18x20.DS18X20(ow)
     else:
         ds1820 = None
