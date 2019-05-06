@@ -30,7 +30,10 @@ class WLanManager():
     def enable_ap(self, default=False):
         profile = self.ap_profile
         wlan = network.WLAN()
+        wlan.init()
+        time.sleep_ms(200)
         self.scan(wlan)
+        time.sleep_ms(400)
 
         # Resolve mode to its numeric code
         mode = network.WLAN.AP
