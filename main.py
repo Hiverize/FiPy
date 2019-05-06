@@ -115,6 +115,7 @@ try:
             else:
                 start_measurement()
     else:
+        _wlan.deinit()
         start_measurement()
 except OSError:
     print("error. reset machine")
