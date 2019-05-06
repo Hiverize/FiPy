@@ -54,22 +54,27 @@ def start_measurement():
         if hx711 is not None:
             data['weight_kg'] = hx711.get_value(times=5)
         perf.stop()
+        m_time = perf.read()
+        perf.reset()
 
         # Log measured values
+        perf.start()
         if _csv is not None:
             _csv.add_dict(data)
         if _wlan.mode() == network.WLAN.STA and _wlan.isconnected() and _beep is not None:
             _beep.add(data)
         print(data)
-        print('Seconds elapsed: {:.4f}'.format(perf.read()))
+        perf.stop()
+        print('Seconds elapsed: {:.4f}s measurement + {:.4f}s logging'.format(m_time, perf.read()))
         perf.reset()
-        time.sleep(5)
 
 
 _wm = WLanManager()
 
 def enable_ap(pin=None):
     global _wm, loop_run
+    pycom.heartbeat(False)
+    pycom.rgbled(0x111100)
     webserver.mws.Start(threaded=True)
     loop_run = False
     getattr(_wm, 'enable_ap')()
