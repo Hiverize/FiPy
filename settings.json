@@ -27,7 +27,7 @@
 
     "telemetry": {
         "beep": {
-            "enabled": true,
+            "enabled": false,
             "server": "https://bee-observer.org",
             "sensor_key": ""
         },
@@ -46,19 +46,21 @@
             }
         },
         "hx711": {
-            "enabled": true,
+            "enabled": false,
             "pin_dout": "P21",
             "pin_pdsck": "P22",
             "calibration_factor": 1,
             "tare_offset": 1000,
         },
         "bme280": {
-            "enabled": true,
+            "enabled": false,
             "pin_sda": "P9",
             "pin_scl": "P10",
         }
     },
     "general": {
-      "initial_time": 1556805688.261163,
+        "general": {
+            "initial_time": 1556805688
+        }
     }
 }
