@@ -8,7 +8,7 @@ class WLanManager():
 
     def __init__(self):
         self.reload_profiles()
-        self.scan(network.WLAN())
+        #self.scan(network.WLAN())
 
     def reload_profiles(self):
         self.config = Config()
