@@ -10,7 +10,7 @@ class CSV_logger:
         # Apparently Pins can not be changed
         sd = SD()
         os.mount(sd, '/sd')
-        
+
         # Check if directory, eg. hiverizelog, was already created,
         # and create it, if not existing:
         try:
@@ -41,10 +41,30 @@ class CSV_logger:
             f.close()
             print("Logging measurements to " +file_path)
         # Get full timestamp
-        
+
         # Append Value
         f = open(file_path, 'a')
         f.write("{}, {}, {}\n".format(full_time_string, sensor, value))
+        f.close()
+
+    def log(self, log_text):
+        print(log_text)
+        time_string, full_time_string = self.get_time_string()
+        # concat filepath
+        file_path = self.dir + "/logging.csv"
+        # Write header, if file did not exist before
+        try:
+            f = open(file_path, 'r')
+            f.close()
+        except OSError:
+            f = open(file_path, 'w')
+            f.write('Timestring, Bob-Logging\n')
+            f.close()
+            print("Logging information, warnings and error to " +file_path)
+
+        # Append Value
+        f = open(file_path, 'a')
+        f.write("{}, {}\n".format(full_time_string, log_text))
         f.close()
 
     def add_dict(self, data):
