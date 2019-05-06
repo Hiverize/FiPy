@@ -27,7 +27,6 @@ def start_measurement():
     global loop_run
 
     while loop_run:
-        pycom.rgbled(0x001100)
         perf.start()
         # Measure all enabled sensors
         data = {}
@@ -91,19 +90,24 @@ rtc.init(time.gmtime(_config.data['general']['general']['initial_time']//1000))
 
 _csv  = logger.csv
 print("Starting...")
-if _config.data['networking']['wlan']['enabled']:
-    _wm.enable_client()
-    if _wlan.mode() == network.WLAN.STA and _wlan.isconnected():
-        try:
-            rtc.ntp_sync("pool.ntp.org")
-        except:
-            pass
-        _beep = logger.beep
-        start_measurement()
-    else:
-        if _config.data['networking']['accesspoint']['enabled'] or _csv is None:
-            enable_ap()
-        else:
+pycom.heartbeat(False)
+pycom.rgbled(0x001100)
+try:
+    if _config.data['networking']['wlan']['enabled']:
+        _wm.enable_client()
+        if _wlan.mode() == network.WLAN.STA and _wlan.isconnected():
+            try:
+                rtc.ntp_sync("pool.ntp.org")
+            except:
+                pass
+            _beep = logger.beep
             start_measurement()
-else:
-    start_measurement()
+        else:
+            if _config.data['networking']['accesspoint']['enabled'] or _csv is None:
+                enable_ap()
+            else:
+                start_measurement()
+    else:
+        start_measurement()
+except:
+    machine.reset()
