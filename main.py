@@ -28,6 +28,8 @@ def start_measurement():
 
     while loop_run:
         perf.start()
+        pycom.heartbeat(False)
+        pycom.rgbled(0x000000)
         # Measure all enabled sensors
         data = {}
         if ds1820 is not None:
@@ -96,6 +98,7 @@ rtc = RTC()
 rtc.init(time.gmtime(_config.data['general']['general']['initial_time']//1000))
 
 _csv  = logger.csv
+
 log("Starting...")
 pycom.heartbeat(False)
 pycom.rgbled(0x001100)
