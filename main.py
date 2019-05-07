@@ -29,7 +29,7 @@ def start_measurement():
     while loop_run:
         perf.start()
         pycom.heartbeat(False)
-        pycom.rgbled(0x001100)
+        pycom.rgbled(0x000000)
         # Measure all enabled sensors
         data = {}
         if ds1820 is not None:
@@ -43,7 +43,7 @@ def start_measurement():
                     if ds_name in _ds_positions:
                         data[_ds_positions[ds_name]] = ds_measurement
                 except:
-                    print("Did not find rom")
+                    log("Did not find rom")
         if bme280 is not None:
             try:
                 (data['t'],
@@ -51,7 +51,7 @@ def start_measurement():
                 data['h']) = bme280.read_compensated_data()
                 data['p'] = data['p']/100 # Pa to mBar
             except:
-                print("BME280 not measuring.")
+                log("BME280 not measuring.")
         if hx711 is not None:
             data['weight_kg'] = hx711.get_value(times=5)
         perf.stop()
@@ -64,7 +64,7 @@ def start_measurement():
             _csv.add_dict(data)
         if _wlan.mode() == network.WLAN.STA and _wlan.isconnected() and _beep is not None:
             _beep.add(data)
-        print(data)
+        log(data)
         perf.stop()
         print('Seconds elapsed: {:.4f}s measurement + {:.4f}s logging'.format(m_time, perf.read()))
         perf.reset()
@@ -72,8 +72,15 @@ def start_measurement():
 
 _wm = WLanManager()
 
+def log(message):
+    if _csv is not None:
+        _csv.log(message)
+    else:
+        print(message)
+
 def enable_ap(pin=None):
     global _wm, loop_run
+    log("enabled ap")
     pycom.heartbeat(False)
     pycom.rgbled(0x111100)
     webserver.mws.Start(threaded=True)
@@ -91,7 +98,10 @@ rtc = RTC()
 rtc.init(time.gmtime(_config.data['general']['general']['initial_time']//1000))
 
 _csv  = logger.csv
-print("Starting...")
+
+log("Starting...")
+pycom.heartbeat(False)
+pycom.rgbled(0x001100)
 try:
     if _config.data['networking']['wlan']['enabled']:
         _wm.enable_client()
@@ -110,5 +120,9 @@ try:
     else:
         _wlan.deinit()
         start_measurement()
+except OSError:
+    print("error. reset machine")
+    machine.reset()
 except:
+    log("error. reset machine")
     machine.reset()
