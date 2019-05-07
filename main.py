@@ -85,7 +85,7 @@ def enable_ap(pin=None):
     loop_run = False
     getattr(_wm, 'enable_ap')()
 
-button_s1 = machine.Pin('P2',
+button_s1 = machine.Pin('P10',
                         mode=machine.Pin.IN,
                         pull=machine.Pin.PULL_UP)
 button_s1.callback(machine.Pin.IRQ_RISING,
@@ -99,27 +99,31 @@ _csv  = logger.csv
 log("Starting...")
 pycom.heartbeat(False)
 pycom.rgbled(0x001100)
-try:
-    if _config.data['networking']['wlan']['enabled']:
-        _wm.enable_client()
-        if _wlan.mode() == network.WLAN.STA and _wlan.isconnected():
-            try:
-                rtc.ntp_sync("pool.ntp.org")
-            except:
-                pass
-            _beep = logger.beep
-            start_measurement()
-        else:
-            if _config.data['networking']['accesspoint']['enabled'] or _csv is None:
-                enable_ap()
-            else:
+# if the reset cause is not pressing the power button or reconnecting power
+if machine.reset_cause() != 0:
+    try:
+        if _config.data['networking']['wlan']['enabled']:
+            _wm.enable_client()
+            if _wlan.mode() == network.WLAN.STA and _wlan.isconnected():
+                try:
+                    rtc.ntp_sync("pool.ntp.org")
+                except:
+                    pass
+                _beep = logger.beep
                 start_measurement()
-    else:
-        _wlan.deinit()
-        start_measurement()
-except OSError:
-    print("error. reset machine")
-    machine.reset()
-except:
-    log("error. reset machine")
-    machine.reset()
+            else:
+                if _config.data['networking']['accesspoint']['enabled'] or _csv is None:
+                    enable_ap()
+                else:
+                    start_measurement()
+        else:
+            _wlan.deinit()
+            start_measurement()
+    except OSError:
+        print("error. reset machine")
+        machine.reset()
+    except:
+        log("error. reset machine")
+        machine.reset()
+else: # if the reset cause is pressing the power button or reconnecting power
+    enable_ap()
