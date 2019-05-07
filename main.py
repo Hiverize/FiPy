@@ -87,11 +87,11 @@ def enable_ap(pin=None):
     loop_run = False
     getattr(_wm, 'enable_ap')()
 
-button_s1 = machine.Pin('P10',
-                        mode=machine.Pin.IN,
-                        pull=machine.Pin.PULL_UP)
-button_s1.callback(machine.Pin.IRQ_RISING,
-                   handler=enable_ap)
+# button_s1 = machine.Pin('P10',
+#                         mode=machine.Pin.IN,
+#                         pull=machine.Pin.PULL_UP)
+# button_s1.callback(machine.Pin.IRQ_RISING,
+#                    handler=enable_ap)
 
 
 rtc = RTC()
