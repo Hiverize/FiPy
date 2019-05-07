@@ -28,6 +28,8 @@ def start_measurement():
 
     while loop_run:
         perf.start()
+        pycom.heartbeat(False)
+        pycom.rgbled(0x001100)
         # Measure all enabled sensors
         data = {}
         if ds1820 is not None:
@@ -78,7 +80,7 @@ def enable_ap(pin=None):
     loop_run = False
     getattr(_wm, 'enable_ap')()
 
-button_s1 = machine.Pin('P2',
+button_s1 = machine.Pin('P10',
                         mode=machine.Pin.IN,
                         pull=machine.Pin.PULL_UP)
 button_s1.callback(machine.Pin.IRQ_RISING,
@@ -90,8 +92,6 @@ rtc.init(time.gmtime(_config.data['general']['general']['initial_time']//1000))
 
 _csv  = logger.csv
 print("Starting...")
-pycom.heartbeat(False)
-pycom.rgbled(0x001100)
 try:
     if _config.data['networking']['wlan']['enabled']:
         _wm.enable_client()
@@ -108,6 +108,7 @@ try:
             else:
                 start_measurement()
     else:
+        _wlan.deinit()
         start_measurement()
 except:
     machine.reset()
