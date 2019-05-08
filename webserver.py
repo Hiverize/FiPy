@@ -119,7 +119,7 @@ def options_config(httpClient, httpResponse, routeArgs):
         contentCharset = "UTF-8",
         content="")
 
-@MicroWebSrv.route('/api/log')
+@MicroWebSrv.route('/api/log', 'GET')
 def get_logfile(httpClient, httpResponse):
     reset_causes = {
         machine.PWRON_RESET: 'PWRON', # Press reset button on FiPy
