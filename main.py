@@ -20,6 +20,15 @@ _wlan = network.WLAN(id=0)
 _ds_config = _config.data['sensors']['ds1820']
 _ds_positions = {v: k for k, v in _ds_config['positions'].items()}
 
+reset_causes = {
+    machine.PWRON_RESET: 'PWRON', # Press reset button on FiPy
+    machine.HARD_RESET: 'HARD',
+    machine.WDT_RESET: 'WDT', # Upload and restart from USB or machine.reset()
+    machine.DEEPSLEEP_RESET: 'DEEPSLEEP',
+    machine.SOFT_RESET: 'SOFT',
+    machine.BROWN_OUT_RESET: 'BROWN_OUT'
+}
+
 loop_run = True
 
 def start_measurement():
@@ -87,8 +96,8 @@ def enable_ap(pin=None):
     loop_run = False
     getattr(_wm, 'enable_ap')()
 
-if _config.data['general']['general']['ap_button_enabled']:
-    button_ap = machine.Pin(_config.data['general']['general']['ap_button_pin'],
+if _config.data['general']['general']['button_ap_enabled']:
+    button_ap = machine.Pin(_config.data['general']['general']['button_ap_pin'],
                             mode=machine.Pin.IN,
                             pull=machine.Pin.PULL_UP)
     button_ap.callback(machine.Pin.IRQ_RISING,
@@ -100,11 +109,11 @@ rtc.init(time.gmtime(_config.data['general']['general']['initial_time']//1000))
 
 _csv  = logger.csv
 
-log("Cause of restart: {}".format(machine.reset_cause()))
+log("Cause of restart: {}".format(reset_causes[machine.reset_cause()]))
 log("Starting...")
 # if the reset cause is not pressing the power button or reconnecting power
 if (machine.reset_cause() != 0 or 
-        _config.data['general']['general']['ap_button_enabled']):
+        _config.data['general']['general']['button_ap_enabled']):
     try:
         if _config.data['networking']['wlan']['enabled']:
             _wm.enable_client()
