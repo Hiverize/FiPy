@@ -1,0 +1,68 @@
+{
+    "networking": {
+
+        "wlan": {
+            "enabled": false,
+            "ssid": "",
+            "encryption": 0,
+            "password": "",
+            "timeout": 1000,
+            "ifconfig": "dhcp"
+        },
+
+        "accesspoint": {
+            "enabled": true,
+            "ssid": "hiverize-accespoint",
+            "encryption": 3,
+            "password": "bienenprojekt",
+            "channel": 4
+        },
+
+        "lora": {
+        },
+
+        "lte": {
+        }
+    },
+
+    "telemetry": {
+        "beep": {
+            "enabled": true,
+            "server": "https://bee-observer.org",
+            "sensor_key": ""
+        }
+    },
+    "sensors": {
+        "ds1820": {
+            "enabled": true,
+            "pin": "P11",
+            "positions": {
+                "t_i_1": "",
+                "t_i_2": "",
+                "t_i_3": "",
+                "t_i_4": "",
+                "t_i_5": "",
+                "t_o": ""
+            }
+        },
+        "hx711": {
+            "enabled": true,
+            "pin_dout": "P21",
+            "pin_pdsck": "P22",
+            "calibration_factor": 1,
+            "tare_offset": 1000
+        },
+        "bme280": {
+            "enabled": true,
+            "pin_sda": "P9",
+            "pin_scl": "P10"
+        }
+    },
+    "general": {
+        "general": {
+            "button_ap_enabled": true,
+            "button_ap_pin": "P2", 
+            "initial_time": 1556805688
+        }
+    }
+}
