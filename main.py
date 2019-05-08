@@ -88,13 +88,15 @@ def log(message):
         print(message)
 
 def enable_ap(pin=None):
-    global _wm, loop_run
-    log("enabled ap")
-    pycom.heartbeat(False)
-    pycom.rgbled(0x111100)
-    webserver.mws.Start(threaded=True)
-    loop_run = False
-    getattr(_wm, 'enable_ap')()
+    global _wm, loop_run, _wlan
+    print("Called. Pin {}.".format(pin))
+    if not _wlan.mode == network.WLAN.AP:
+        log("enabled ap")
+        pycom.heartbeat(False)
+        pycom.rgbled(0x111100)
+        webserver.mws.Start(threaded=True)
+        loop_run = False
+        getattr(_wm, 'enable_ap')()
 
 if _config.data['general']['general']['button_ap_enabled']:
     button_ap = machine.Pin(_config.data['general']['general']['button_ap_pin'],
