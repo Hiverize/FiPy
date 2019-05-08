@@ -39,9 +39,9 @@ class WLanManager():
         mode = network.WLAN.AP
 
         if default:
-            key = 'bienenprojekt'
+            key = 'hiverize'
         else:
-            key = profile.get('password', 'bienenprojekt')
+            key = profile.get('password', 'hiverize')
         wlan.init(mode=mode,
                   ssid=profile.get('ssid'),
                   auth=(profile.get('encryption', 3),
