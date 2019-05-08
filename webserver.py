@@ -119,6 +119,27 @@ def options_config(httpClient, httpResponse, routeArgs):
         contentCharset = "UTF-8",
         content="")
 
+@MicroWebSrv.route('/api/log')
+def get_logfile(httpClient, httpResponse):
+    reset_causes = {
+        machine.PWRON_RESET: 'PWRON', # Press reset button on FiPy
+        machine.HARD_RESET: 'HARD',
+        machine.WDT_RESET: 'WDT', # Upload and restart from USB or machine.reset()
+        machine.DEEPSLEEP_RESET: 'DEEPSLEEP',
+        machine.SOFT_RESET: 'SOFT',
+        machine.BROWN_OUT_RESET: 'BROWN_OUT'
+    }
+    data = {}
+    data['reset_cause'] = reset_causes[machine.reset_cause()]
+    try:
+        with open('/sd/hiverizelog/logging.csv') as f:
+            data['logfile'] = f.read()
+    except OSError as err:
+        data['logfile'] = "Could not open logfile: {}".format(err)
+    return httpResponse.WriteResponseJSONOk(
+        obj=data,
+        headers=_headers)
+
 mws = MicroWebSrv()
 mws.SetNotFoundPageUrl("http://hiverize.wifi")
 MicroDNSSrv.Create({ '*' : '10.10.10.1' })
