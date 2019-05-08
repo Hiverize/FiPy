@@ -100,6 +100,7 @@ rtc.init(time.gmtime(_config.data['general']['general']['initial_time']//1000))
 
 _csv  = logger.csv
 
+log("Cause of restart: {}".format(machine.reset_cause()))
 log("Starting...")
 # if the reset cause is not pressing the power button or reconnecting power
 if (machine.reset_cause() != 0 or 
