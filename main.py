@@ -87,11 +87,12 @@ def enable_ap(pin=None):
     loop_run = False
     getattr(_wm, 'enable_ap')()
 
-# button_s1 = machine.Pin('P10',
-#                         mode=machine.Pin.IN,
-#                         pull=machine.Pin.PULL_UP)
-# button_s1.callback(machine.Pin.IRQ_RISING,
-#                    handler=enable_ap)
+if _config.data['general']['general']['ap_button_enabled']:
+    button_ap = machine.Pin(_config.data['general']['general']['ap_button_pin'],
+                            mode=machine.Pin.IN,
+                            pull=machine.Pin.PULL_UP)
+    button_ap.callback(machine.Pin.IRQ_RISING,
+                       handler=enable_ap)
 
 
 rtc = RTC()
@@ -100,10 +101,9 @@ rtc.init(time.gmtime(_config.data['general']['general']['initial_time']//1000))
 _csv  = logger.csv
 
 log("Starting...")
-pycom.heartbeat(False)
-pycom.rgbled(0x001100)
 # if the reset cause is not pressing the power button or reconnecting power
-if machine.reset_cause() != 0:
+if (machine.reset_cause() != 0 or 
+        _config.data['general']['general']['ap_button_enabled']):
     try:
         if _config.data['networking']['wlan']['enabled']:
             _wm.enable_client()
