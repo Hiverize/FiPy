@@ -6,13 +6,37 @@ from wlanmanager import WLanManager
 from network import WLAN
 
 ###############################################################################
-# Start of boot.py, flash RGBLED yellow until it is finished                  #
+# Disable LED heartbeat on boot                                               #
 ###############################################################################
 
-pycom.heartbeat(False)
+if pycom.heartbeat_on_boot():
+    pycom.heartbeat_on_boot(False)
+    pycom.heartbeat(False)
+
+###############################################################################
+# Start of boot.py, yellow LED until it is finished                           #
+###############################################################################
+
+print("Starting boot process...")
 pycom.rgbled(0x111100)
 
-print("Boot finished.")
+###############################################################################
+# Disable automatic start of WLan device                                      #
+###############################################################################
+
+if pycom.wifi_on_boot():
+    pycom.wifi_on_boot(False)
+
+###############################################################################
+# Initial scan of available WLan SSIDS                                        #
+###############################################################################
 
 wm = WLanManager()
-wm.scan(WLAN())
+ssids = wm.scan(WLAN())
+print("{:d} SSIDS found".format(len(ssids)))
+
+###############################################################################
+# Finished boot process                                                       #
+###############################################################################
+
+print("Boot finished.")
