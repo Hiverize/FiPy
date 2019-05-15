@@ -111,6 +111,7 @@ rtc.init(time.gmtime(_config.data['general']['general']['initial_time']//1000))
 
 _csv  = logger.csv
 
+print("SSID: {}".format(_config.data['networking']['accesspoint']['ssid']))
 log("Cause of restart: {}".format(reset_causes[machine.reset_cause()]))
 log("Starting...")
 # if the reset cause is not pressing the power button or reconnecting power
