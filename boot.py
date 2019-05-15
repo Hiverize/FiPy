@@ -32,8 +32,8 @@ if pycom.wifi_on_boot():
 ###############################################################################
 
 wm = WLanManager()
-ssids = wm.scan(WLAN())
-print("{:d} SSIDS found".format(len(ssids)))
+no_ssids = wm.scan(WLAN())
+print("{:d} SSIDS found".format(no_ssids))
 
 ###############################################################################
 # Finished boot process                                                       #
