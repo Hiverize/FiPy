@@ -19,7 +19,7 @@ def restart(httpClient, httpResponse):
 
 
 ##############################################################################
-# Routes for sensor readings #################################################
+# Routes for sensor readings                                                 #
 ##############################################################################
 
 @MicroWebSrv.route('/api/sensors/<sensor>')
@@ -56,7 +56,7 @@ def measure_ds1820(httpClient, httpResponse, routeArgs):
 
 
 ##############################################################################
-# Routes for working with the config #########################################
+# Routes for working with the config                                         #
 ##############################################################################
 
 @MicroWebSrv.route('/api/config')
@@ -68,7 +68,7 @@ def get_config_subsection(httpClient, httpResponse, routeArgs):
     section = routeArgs['section']
     subsection = routeArgs['subsection']
 
-    data = _config.data.get(section, {}).get(subsection, None)
+    data = _config.get_subsection(section, subsection)
     if data is None:
         return httpResponse.WriteResponseJSONError(404)
     else:
@@ -81,37 +81,16 @@ def post_config_subsection(httpClient, httpResponse, routeArgs):
     section = routeArgs['section']
     subsection = routeArgs['subsection']
     form_data = httpClient.ReadRequestContentAsJSON()
-
-    if not section in _config.data.keys():
-        _config.data[section] = {}
-
-    _config.data[section][subsection] = form_data
-    _config.write()
+    _config.set_subsection(section, subsection, form_data)
     return httpResponse.WriteResponseJSONOk(
         obj={'status': 'saved'},
         headers=_headers)
-
-@MicroWebSrv.route('/api/config/<section>/<subsection>', 'DELETE')
-def delete_config_subsection(httpClient, httpResponse, routeArgs):
-    section = routeArgs['section']
-    subsection = routeArgs['subsection']
-
-    if section in _config.data.keys():
-        data = _config.data[section].pop(subsection, None)
-    
-    if data is None:
-        return httpResponse.WriteResponseJSONError(404)
-    else:
-        _config.write()
-        return httpResponse.WriteResponseJSONOk(
-            obj={'status': 'deleted'},
-            headers=_headers)
 
 @MicroWebSrv.route('/api/config/<section>/<subsection>', 'OPTIONS')
 def options_config(httpClient, httpResponse, routeArgs):
     headers = {
         'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type'}
     return httpResponse.WriteResponseOk(
         headers = headers,

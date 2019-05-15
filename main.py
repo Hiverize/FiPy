@@ -17,8 +17,8 @@ _config = Config()
 
 _wlan = network.WLAN(id=0)
 
-_ds_config = _config.data['sensors']['ds1820']
-_ds_positions = {v: k for k, v in _ds_config['positions'].items()}
+_ds_positions = {v: k for k, v in 
+                 _config.get_value('sensors', 'ds1820', 'positions').items()}
 
 reset_causes = {
     machine.PWRON_RESET: 'PWRON', # Press reset button on FiPy
@@ -98,8 +98,8 @@ def enable_ap(pin=None):
         loop_run = False
         getattr(_wm, 'enable_ap')()
 
-if _config.data['general']['general']['button_ap_enabled']:
-    button_ap = machine.Pin(_config.data['general']['general']['button_ap_pin'],
+if _config.get_value('general', 'general', 'button_ap_enabled'):
+    button_ap = machine.Pin(_config.get_value('general', 'general', 'button_ap_pin'),
                             mode=machine.Pin.IN,
                             pull=machine.Pin.PULL_UP)
     button_ap.callback(machine.Pin.IRQ_RISING,
@@ -107,18 +107,18 @@ if _config.data['general']['general']['button_ap_enabled']:
 
 
 rtc = RTC()
-rtc.init(time.gmtime(_config.data['general']['general']['initial_time']//1000))
+rtc.init(time.gmtime(_config.get_value('general', 'general', 'initial_time')))
 
 _csv  = logger.csv
 
-print("SSID: {}".format(_config.data['networking']['accesspoint']['ssid']))
+print("SSID: {}".format(_config.get_value('networking', 'accesspoint', 'ssid')))
 log("Cause of restart: {}".format(reset_causes[machine.reset_cause()]))
 log("Starting...")
 # if the reset cause is not pressing the power button or reconnecting power
 if (machine.reset_cause() != 0 or 
-        _config.data['general']['general']['button_ap_enabled']):
+        _config.get_value('general', 'general', 'button_ap_enabled')):
     try:
-        if _config.data['networking']['wlan']['enabled']:
+        if _config.get_value('networking', 'wlan', 'enabled'):
             _wm.enable_client()
             if _wlan.mode() == network.WLAN.STA and _wlan.isconnected():
                 try:
@@ -128,7 +128,7 @@ if (machine.reset_cause() != 0 or
                 _beep = logger.beep
                 start_measurement()
             else:
-                if _config.data['networking']['accesspoint']['enabled'] or _csv is None:
+                if _config.get_value('networking', 'accesspoint', 'enabled') or _csv is None:
                     enable_ap()
                 else:
                     start_measurement()

@@ -5,7 +5,7 @@ from config import Config
 _config = Config()
 
 try:
-    beep = Beep(_config.data['telemetry']['beep'])
+    beep = Beep(_config)
 except:
     beep = None
 

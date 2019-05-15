@@ -7,13 +7,7 @@ import binascii
 class WLanManager():
 
     def __init__(self):
-        self.reload_profiles()
-        self.scan(network.WLAN())
-
-    def reload_profiles(self):
         self.config = Config()
-        self.ap_profile = self.config.data['networking']['accesspoint']
-        self.client_profile = self.config.data['networking']['wlan']
 
     def scan(self, wlan):
         # Scan to find all available SSIDs
@@ -24,58 +18,56 @@ class WLanManager():
             'bssid': binascii.hexlify(s.bssid).decode('utf-8'),
             'sec': s.sec,
             'channel': s.channel} for s in scan]
-        self.config.data['networking']['wlan']['available'] = ssids
+        self.config.set_value('networking', 'wlan', 'available', ssids)
         self.config.write()
+        return len(ssids)
 
     def enable_ap(self, default=False):
-        profile = self.ap_profile
         wlan = network.WLAN()
-        wlan.init()
-        time.sleep_ms(200)
-        self.scan(wlan)
-        time.sleep_ms(400)
 
         # Resolve mode to its numeric code
         mode = network.WLAN.AP
 
-        if default:
-            key = 'hiverize'
-        else:
-            key = profile.get('password', 'hiverize')
+        ssid = self.config.get_value('networking', 'accesspoint', 'ssid') 
+        password = self.config.get_value('networking', 'accesspoint', 'password')
+        encryption = self.config.get_value('networking', 'accesspoint', 'encryption')
+        channel = self.config.get_value('networking', 'accesspoint', 'channel')
+
         wlan.init(mode=mode,
-                  ssid=profile.get('ssid'),
-                  auth=(profile.get('encryption', 3),
-                        key),
-                  channel=profile.get('channel', 1))
+                  ssid=ssid,
+                  auth=(encryption, password),
+                  channel=channel)
         wlan.ifconfig(id=1,
                       config=('10.10.10.1',
-                             '255.255.255.0',
-                             '10.10.10.1',
-                             '10.10.10.1'))
+                              '255.255.255.0',
+                              '10.10.10.1',
+                              '10.10.10.1'))
         time.sleep(10)
-        if wlan.mode() == 1:
-            print('AP creation failed!')
-        else:
-            print('AP created!')
 
     def enable_client(self):
-        profile = self.client_profile
         wlan = network.WLAN()
+        wlan.init()
+
         # Resolve mode to its numeric code
         mode = network.WLAN.STA
 
         wlan.init(mode=mode)
-        if profile.get('ifconfig') == 'dhcp':
+
+        ifconfig = self.config.get_value('networking', 'wlan', 'ifconfig')
+        if ifconfig == 'dhcp':
             wlan.ifconfig(id=0, config='dhcp')
         else:
-            ip_config=(profile.get('ipaddress'),
-                       profile.get('subnet'),
-                       profile.get('gateway'),
-                       profile.get('dns'))
+            ipaddress = self.config.get_value('networking', 'wlan', 'ipaddress')
+            subnet = self.config.get_value('networking', 'wlan', 'subnet')
+            gateway = self.config.get_value('networking', 'wlan', 'gateway')
+            dns = self.config.get_value('networking', 'wlan', 'dns')
+            ip_config=(ipaddress, subnet, gateway, dns)
             wlan.ifconfig(id=0, config=ip_config)
 
-        wlan.connect(profile.get('ssid'),
-                     auth=(profile.get('encryption', 3),
-                           profile.get('password')),
-                     timeout=1000)
+        ssid = self.config.get_value('networking', 'wlan', 'ssid') 
+        password = self.config.get_value('networking', 'wlan', 'password')
+        encryption = self.config.get_value('networking', 'wlan', 'encryption')
+
+        wlan.connect(ssid,
+                     auth=(encryption, password))
         time.sleep(10)
