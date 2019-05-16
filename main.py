@@ -29,16 +29,17 @@ reset_causes = {
     machine.BROWN_OUT_RESET: 'BROWN_OUT'
 }
 
+measurement_interval = _config.get_value('general', 'general', 'measurement_interval')
 loop_run = True
 
 def start_measurement():
     perf = Timer.Chrono()
     global loop_run
+    pycom.heartbeat(False)
+    pycom.rgbled(0x000000)
 
     while loop_run:
         perf.start()
-        pycom.heartbeat(False)
-        pycom.rgbled(0x000000)
         # Measure all enabled sensors
         data = {}
         if ds1820 is not None:
@@ -63,9 +64,6 @@ def start_measurement():
                 log("BME280 not measuring.")
         if hx711 is not None:
             data['weight_kg'] = hx711.get_value(times=5)
-        perf.stop()
-        m_time = perf.read()
-        perf.reset()
 
         # Log measured values
         perf.start()
@@ -75,8 +73,12 @@ def start_measurement():
             _beep.add(data)
         log(data)
         perf.stop()
-        print('Seconds elapsed: {:.4f}s measurement + {:.4f}s logging'.format(m_time, perf.read()))
+        time_elapsed = perf.read()
         perf.reset()
+        time_until_measurement = measurement_interval - time_elapsed
+        print('Seconds elapsed: {:.2f}s, time until next measurement: {:.2f}s'.format(time_elapsed, time_until_measurement))
+        if time_until_measurement > 0:
+            time.sleep_ms(int(time_until_measurement * 1000))
 
 
 _wm = WLanManager()

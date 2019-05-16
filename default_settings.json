@@ -65,7 +65,7 @@
             "button_ap_pin": "", 
             "initial_time": 155680,
             "feedback_led": true,
-            "measurement_interval"
+            "measurement_interval": 10
         }
     }
 }
