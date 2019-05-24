@@ -7,14 +7,15 @@
             "encryption": 0,
             "password": "",
             "timeout": 1000,
-            "ifconfig": "dhcp"
+            "ifconfig": "dhcp",
+            "available": {}
         },
 
         "accesspoint": {
             "enabled": true,
             "ssid": "hiverize-accespoint",
             "encryption": 3,
-            "password": "bienenprojekt",
+            "password": "hiverize",
             "channel": 4
         },
 
