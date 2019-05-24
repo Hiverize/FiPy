@@ -48,8 +48,8 @@
         },
         "hx711": {
             "enabled": true,
-            "pin_dout": "P21",
-            "pin_pdsck": "P22",
+            "pin_dout": "P22",
+            "pin_pdsck": "P21",
             "calibration_factor": 1,
             "tare_offset": 1000
         },
