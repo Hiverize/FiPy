@@ -13,7 +13,7 @@
 
         "accesspoint": {
             "enabled": true,
-            "ssid": "hiverize-accesspoint",
+            "ssid": "hiverize-accespoint",
             "encryption": 3,
             "password": "hiverize",
             "channel": 4
@@ -61,10 +61,9 @@
     },
     "general": {
         "general": {
-            "button_ap_enabled": false,
-            "button_ap_pin": "", 
-            "initial_time": 155680,
-            "feedback_led": true,
+            "button_ap_enabled": true,
+            "button_ap_pin": "P2", 
+            "initial_time": 1556805688,
             "measurement_interval": 10
         }
     }

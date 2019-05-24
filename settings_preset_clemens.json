@@ -63,7 +63,8 @@
         "general": {
             "button_ap_enabled": false,
             "button_ap_pin": "", 
-            "initial_time": 1556805688
+            "initial_time": 1556805688,
+            "measurement_interval": 10
         }
     }
 }
