@@ -71,7 +71,7 @@ def start_measurement():
             _csv.add_dict(data)
         if _wlan.mode() == network.WLAN.STA and _wlan.isconnected() and _beep is not None:
             _beep.add(data)
-        log(data)
+        print(data)
         perf.stop()
         time_elapsed = perf.read()
         perf.reset()
@@ -96,9 +96,10 @@ def enable_ap(pin=None):
         log("enabled ap")
         pycom.heartbeat(False)
         pycom.rgbled(0x111100)
-        webserver.mws.Start(threaded=True)
         loop_run = False
         getattr(_wm, 'enable_ap')()
+    if not webserver.mws.IsStarted():
+        webserver.mws.Start(threaded=True)
 
 if _config.get_value('general', 'general', 'button_ap_enabled'):
     button_ap = machine.Pin(_config.get_value('general', 'general', 'button_ap_pin'),
