@@ -38,10 +38,10 @@ class WLanManager():
                   auth=(encryption, password),
                   channel=channel)
         wlan.ifconfig(id=1,
-                      config=('10.10.10.1',
+                      config=('192.168.4.1',
                               '255.255.255.0',
-                              '10.10.10.1',
-                              '10.10.10.1'))
+                              '192.168.4.1',
+                              '192.168.4.1'))
         time.sleep(10)
 
     def enable_client(self):

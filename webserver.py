@@ -121,4 +121,4 @@ def get_logfile(httpClient, httpResponse):
 
 mws = MicroWebSrv()
 mws.SetNotFoundPageUrl("http://hiverize.wifi")
-MicroDNSSrv.Create({ '*' : '10.10.10.1' })
+MicroDNSSrv.Create({ '*' : '192.168.4.1' })
