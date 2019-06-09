@@ -161,5 +161,7 @@ try:
     start_measurement()
 
     # _wlan.deinit()
+except Exception as e:
+    log("Exception: " + str(e))
 finally:
     machine.reset()
