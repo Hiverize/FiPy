@@ -5,6 +5,7 @@ import binascii
 import uos
 import network
 import pycom
+import sys
 
 from sensors import ds1820, hx711, bme280
 import logger
@@ -123,26 +124,30 @@ if (machine.reset_cause() != 0 or
     try:
         if _config.get_value('networking', 'wlan', 'enabled'):
             _wm.enable_client()
+            _beep = logger.beep
             if _wlan.mode() == network.WLAN.STA and _wlan.isconnected():
                 try:
                     rtc.ntp_sync("pool.ntp.org")
                 except:
                     pass
-                _beep = logger.beep
                 start_measurement()
             else:
-                if _config.get_value('networking', 'accesspoint', 'enabled') or _csv is None:
+                if ((_config.get_value('networking', 'accesspoint', 'enabled')
+                        or _csv is None) 
+                        and not _config.get_value('general', 'general', 'button_ap_enabled')):
                     enable_ap()
                 else:
                     start_measurement()
         else:
             _wlan.deinit()
             start_measurement()
-    except OSError:
+    except OSError as e:
+        print(e)
         print("error. reset machine")
         machine.reset()
     except:
-        log("error. reset machine")
+        print(sys.exc_info()[0])
+        print("error. reset machine")
         machine.reset()
 else: # if the reset cause is pressing the power button or reconnecting power
     enable_ap()
