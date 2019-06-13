@@ -51,7 +51,7 @@
             "pin_dout": "P22",
             "pin_pdsck": "P21",
             "calibration_factor": 1,
-            "tare_offset": 1000
+            "tare_offset": 0
         },
         "bme280": {
             "enabled": true,
@@ -61,8 +61,8 @@
     },
     "general": {
         "general": {
-            "button_ap_enabled": false,
-            "button_ap_pin": "", 
+            "button_ap_enabled": true,
+            "button_ap_pin": "P2", 
             "initial_time": 1556805688,
             "measurement_interval": 10
         }
