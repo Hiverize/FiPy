@@ -4,6 +4,7 @@ import machine
 import binascii
 import network
 import pycom
+import sys
 
 from sensors import ds1820, hx711, bme280
 import logger
@@ -165,3 +166,4 @@ except Exception as e:
     log("Exception: " + str(e))
 finally:
     machine.reset()
+

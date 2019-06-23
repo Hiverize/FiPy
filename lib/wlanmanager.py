@@ -66,7 +66,7 @@ class WLanManager():
 
         ssid = self.config.get_value('networking', 'wlan', 'ssid') 
         password = self.config.get_value('networking', 'wlan', 'password')
-        encryption = self.config.get_value('networking', 'wlan', 'encryption')
+        encryption = int(self.config.get_value('networking', 'wlan', 'encryption'))
 
         wlan.connect(ssid,
                      auth=(encryption, password))
