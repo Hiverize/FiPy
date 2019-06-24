@@ -134,18 +134,6 @@ rtc.init(time.gmtime(_config.get_value('general', 'general', 'initial_time')))
 
 _csv = logger.csv
 
-# 0. Sync Time
-
-# 1. Maschiene startet nicht aus deep sleep_ms
-# TODO _config.get_value('general', 'general', 'button_ap_enabled')
-
-# 2. 10 Minuten betrieb mit sleep und wlan accesspoint
-
-# 3. Messen und loggen / versenden
-
-# 4. deep sleep
-
-# finaly reset
 
 try:
     log("Starting from: {}".format(reset_causes[machine.reset_cause()]))
