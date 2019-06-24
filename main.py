@@ -4,7 +4,8 @@ import machine
 import binascii
 import network
 import pycom
-import sys
+from network import LTE
+
 
 from sensors import ds1820, hx711, bme280
 import logger
@@ -19,6 +20,7 @@ boottime.start()
 _config = Config()
 
 _wlan = network.WLAN(id=0)
+lte = LTE()
 
 _ds_positions = {v: k for k, v in
                  _config.get_value('sensors', 'ds1820', 'positions').items()}
@@ -62,8 +64,8 @@ def start_measurement():
         if bme280 is not None:
             try:
                 (data['t'],
-                data['p'],
-                data['h']) = bme280.read_compensated_data()
+                 data['p'],
+                 data['h']) = bme280.read_compensated_data()
 
                 data['p'] = data['p'] / 100  # Pa to mBar
             except Exception:
@@ -75,9 +77,9 @@ def start_measurement():
         perf.start()
         if _csv is not None:
             _csv.add_dict(data)
-        if _wlan.mode() == network.WLAN.STA and _wlan.isconnected() and logger.beep is not None:
+        if _wlan.mode() == network.WLAN.STA and _wlan.isconnected() and _beep is not None:
             log("beep")
-            logger.beep.add(data)
+            _beep.add(data)
         print(data)
         perf.stop()
         time_elapsed = perf.read()
@@ -89,10 +91,15 @@ def start_measurement():
         log(boottime.read())
         if machine.reset_cause() != machine.DEEPSLEEP_RESET and boottime.read() < 10 * 60:
             log('sleep')
-            # time.sleep_ms(int(abs(time_until_measurement) * 1000))
+            time.sleep_ms(int(abs(time_until_measurement) * 1000))
         else:
             log('deepsleep')
-            machine.deepsleep(int(time_until_measurement * 1000))
+            log(str(int(abs(time_until_measurement))))
+            lte.attach()
+            lte.disconnect()
+            lte.dettach()
+            _wlan.deinit()
+            machine.deepsleep(int(abs(time_until_measurement * 1000)))
 
 
 def log(message):
@@ -145,11 +152,12 @@ try:
 
     if _config.get_value('networking', 'wlan', 'enabled'):
         _wm.enable_client()
+        _beep = logger.beep
         if _wlan.mode() == network.WLAN.STA and _wlan.isconnected():
             try:
-                log("Pre Time: " + rtc.now())
+                log("Pre Time: " + str(rtc.now()))
                 rtc.ntp_sync("pool.ntp.org")
-                log("Time: " + rtc.now())
+                log("Time: " + str(rtc.now()))
             except Exception as e:
                 log(str(e))
 
@@ -166,4 +174,3 @@ except Exception as e:
     log("Exception: " + str(e))
 finally:
     machine.reset()
-
