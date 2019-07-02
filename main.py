@@ -40,13 +40,14 @@ measurement_interval = _config.get_value('general', 'general', 'measurement_inte
 
 
 def start_measurement():
+    AP_TIME = 2 * 60
     perf = Timer.Chrono()
     pycom.heartbeat(False)
     pycom.rgbled(0x000000)
 
     perf.start()
 
-    while True:
+    while boottime.read() < AP_TIME:
         # Measure all enabled sensors
         data = {}
         if ds1820 is not None:
@@ -80,26 +81,27 @@ def start_measurement():
         if _wlan.mode() == network.WLAN.STA and _wlan.isconnected() and _beep is not None:
             log("beep")
             _beep.add(data)
-        print(data)
+        log(data)
         perf.stop()
         time_elapsed = perf.read()
         perf.reset()
         time_until_measurement = measurement_interval - time_elapsed
-        print('SecondsO elapsed: {:.2f}s, time until next measurement: {:.2f}s'.format(time_elapsed, time_until_measurement))
+        log('SecondsO elapsed: {:.2f}s, time until next measurement: {:.2f}s'.format(time_elapsed, time_until_measurement))
 
         # 10 Minuten nach dem Strom an soll der AC da sein.
-        log(boottime.read())
-        if machine.reset_cause() != machine.DEEPSLEEP_RESET and boottime.read() < 10 * 60:
+        log('boottime: ' + str(boottime.read()))
+        if machine.reset_cause() != machine.DEEPSLEEP_RESET and boottime.read() < AP_TIME:
             log('sleep')
             time.sleep_ms(int(abs(time_until_measurement) * 1000))
         else:
-            log('deepsleep')
-            log(str(int(abs(time_until_measurement))))
-            lte.attach()
-            lte.disconnect()
             lte.dettach()
             _wlan.deinit()
             machine.deepsleep(int(abs(time_until_measurement * 1000)))
+            log('deepsleep')
+            machine.deepsleep(int(abs(10 * 1000)))
+
+    log('Unexpected exited while loop')
+    machine.reset()
 
 
 def log(message):
@@ -111,7 +113,7 @@ def log(message):
 
 def enable_ap(pin=None):
     global _wm, _wlan
-    print("Called. Pin {}.".format(pin))
+    log("Called. Pin {}.".format(pin))
     if not _wlan.mode == network.WLAN.AP:
         log("enabled ap")
         pycom.heartbeat(False)
@@ -129,13 +131,12 @@ if _config.get_value('general', 'general', 'button_ap_enabled'):
                        handler=enable_ap)
 
 
-rtc = RTC()
-rtc.init(time.gmtime(_config.get_value('general', 'general', 'initial_time')))
-
-_csv = logger.csv
-
-
 try:
+    rtc = RTC()
+    rtc.init(time.gmtime(_config.get_value('general', 'general', 'initial_time')))
+
+    _csv = logger.csv
+
     log("Starting from: {}".format(reset_causes[machine.reset_cause()]))
 
     if _config.get_value('networking', 'wlan', 'enabled'):
