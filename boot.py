@@ -1,6 +1,4 @@
-import machine
 import pycom
-import time
 
 from wlanmanager import WLanManager
 from network import WLAN
