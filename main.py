@@ -96,8 +96,8 @@ def start_measurement():
         else:
             lte.dettach()
             _wlan.deinit()
-            machine.deepsleep(int(abs(time_until_measurement * 1000)))
             log('deepsleep')
+            # machine.deepsleep(int(abs(time_until_measurement * 1000)))
             machine.deepsleep(int(abs(10 * 1000)))
 
     log('Unexpected exited while loop')
