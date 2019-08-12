@@ -18,7 +18,7 @@ _config = Config()
 
 _wlan = network.WLAN(id=0)
 
-_ds_positions = {v: k for k, v in 
+_ds_positions = {v: k for k, v in
                  _config.get_value('sensors', 'ds1820', 'positions').items()}
 
 reset_causes = {
@@ -119,7 +119,7 @@ print("SSID: {}".format(_config.get_value('networking', 'accesspoint', 'ssid')))
 log("Cause of restart: {}".format(reset_causes[machine.reset_cause()]))
 log("Starting...")
 # if the reset cause is not pressing the power button or reconnecting power
-if (machine.reset_cause() != 0 or 
+if (machine.reset_cause() != 0 or
         _config.get_value('general', 'general', 'button_ap_enabled')):
     try:
         if _config.get_value('networking', 'wlan', 'enabled'):
@@ -133,7 +133,7 @@ if (machine.reset_cause() != 0 or
                 start_measurement()
             else:
                 if ((_config.get_value('networking', 'accesspoint', 'enabled')
-                        or _csv is None) 
+                        or _csv is None)
                         and not _config.get_value('general', 'general', 'button_ap_enabled')):
                     enable_ap()
                 else:

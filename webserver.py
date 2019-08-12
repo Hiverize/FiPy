@@ -25,7 +25,8 @@ def restart(httpClient, httpResponse):
 @MicroWebSrv.route('/api/sensors/<sensor>')
 def measure_ds1820(httpClient, httpResponse, routeArgs):
     sensor = routeArgs['sensor']
-    if hasattr(sensors, sensor):
+    #if hasattr(sensors, sensor):
+    if True:
 
         # Read sensor DS1820
         if sensor == 'ds1820':
@@ -41,6 +42,11 @@ def measure_ds1820(httpClient, httpResponse, routeArgs):
         elif sensor == 'hx711':
             hx = sensors.hx711
             data = {'weight': hx.read_average(times=5)}
+
+        # Read sensor HX711
+        elif sensor == 'hx711cal':
+            hx = sensors.hx711
+            data = {'weight': hx.get_value(times=5)}
 
         # Read sensor BME280
         elif sensor == 'bme280':
