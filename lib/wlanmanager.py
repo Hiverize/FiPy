@@ -11,7 +11,7 @@ class WLanManager():
 
     def scan(self, wlan):
         # Scan to find all available SSIDs
-        wlan.mode(network.WLAN.STA)
+        wlan.init(mode=network.WLAN.STA)
         scan = wlan.scan()
         ssids = [{
             'ssid': s.ssid,
