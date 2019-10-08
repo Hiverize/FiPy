@@ -16,7 +16,8 @@ gc.disable()
 # Disable LTE modem                                                           #
 ###############################################################################
 
-pycom.lte_modem_en_on_boot(False)
+if pycom.lte_modem_en_on_boot():
+    pycom.lte_modem_en_on_boot(False)
 
 ###############################################################################
 # Disable LED heartbeat on boot                                               #
