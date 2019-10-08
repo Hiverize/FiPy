@@ -2,7 +2,7 @@
     "networking": {
 
         "wlan": {
-            "enabled": false,
+            "enabled": true,
             "ssid": "",
             "encryption": 0,
             "password": "",
