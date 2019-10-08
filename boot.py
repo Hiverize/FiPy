@@ -3,8 +3,6 @@ import pycom
 import time
 import gc
 
-from wlanmanager import WLanManager
-from network import WLAN, LTE
 
 ###############################################################################
 # Disable automatic garbage collection                                        #
@@ -17,6 +15,7 @@ gc.disable()
 ###############################################################################
 
 if pycom.lte_modem_en_on_boot():
+    print("LTE mode")
     pycom.lte_modem_en_on_boot(False)
 
 ###############################################################################
