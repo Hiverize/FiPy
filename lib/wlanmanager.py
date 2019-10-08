@@ -23,7 +23,7 @@ class WLanManager():
         return len(ssids)
 
     def enable_ap(self, default=False):
-        wlan = network.WLAN()
+        wlan = network.WLAN(id=0)
 
         # Resolve mode to its numeric code
         mode = network.WLAN.AP
@@ -45,29 +45,26 @@ class WLanManager():
         time.sleep(10)
 
     def enable_client(self):
-        wlan = network.WLAN()
-        wlan.init()
-
         # Resolve mode to its numeric code
         mode = network.WLAN.STA
 
-        wlan.init(mode=mode)
-
-        ifconfig = self.config.get_value('networking', 'wlan', 'ifconfig')
-        if ifconfig == 'dhcp':
-            wlan.ifconfig(id=0, config='dhcp')
-        else:
-            ipaddress = self.config.get_value('networking', 'wlan', 'ipaddress')
-            subnet = self.config.get_value('networking', 'wlan', 'subnet')
-            gateway = self.config.get_value('networking', 'wlan', 'gateway')
-            dns = self.config.get_value('networking', 'wlan', 'dns')
-            ip_config=(ipaddress, subnet, gateway, dns)
-            wlan.ifconfig(id=0, config=ip_config)
+        wlan = network.WLAN(mode=mode)
+        time.sleep(2)
 
         ssid = self.config.get_value('networking', 'wlan', 'ssid') 
         password = self.config.get_value('networking', 'wlan', 'password')
         encryption = int(self.config.get_value('networking', 'wlan', 'encryption'))
-
         wlan.connect(ssid,
                      auth=(encryption, password))
         time.sleep(10)
+
+        # ifconfig = self.config.get_value('networking', 'wlan', 'ifconfig')
+        # if ifconfig == 'dhcp':
+        #     wlan.ifconfig(config='dhcp')
+        # else:
+        #     ipaddress = self.config.get_value('networking', 'wlan', 'ipaddress')
+        #     subnet = self.config.get_value('networking', 'wlan', 'subnet')
+        #     gateway = self.config.get_value('networking', 'wlan', 'gateway')
+        #     dns = self.config.get_value('networking', 'wlan', 'dns')
+        #     ip_config=(ipaddress, subnet, gateway, dns)
+        #     wlan.ifconfig(config=ip_config)
