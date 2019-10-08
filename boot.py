@@ -1,16 +1,22 @@
 import machine
 import pycom
 import time
+import gc
 
 from wlanmanager import WLanManager
 from network import WLAN, LTE
+
+###############################################################################
+# Disable automatic garbage collection                                        #
+###############################################################################
+
+gc.disable()
 
 ###############################################################################
 # Disable LTE modem                                                           #
 ###############################################################################
 lte = LTE()
 lte.deinit()
-
 
 ###############################################################################
 # Disable LED heartbeat on boot                                               #
