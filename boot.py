@@ -3,7 +3,14 @@ import pycom
 import time
 
 from wlanmanager import WLanManager
-from network import WLAN
+from network import WLAN, LTE
+
+###############################################################################
+# Disable LTE modem                                                           #
+###############################################################################
+lte = LTE()
+lte.deinit()
+
 
 ###############################################################################
 # Disable LED heartbeat on boot                                               #
