@@ -6,11 +6,15 @@ import sys
 import time
 import uos
 
-import logger
 import webserver
 from config import Config
 from sensors import ds1820, hx711, bme280
 from wlanmanager import WLanManager
+
+
+def log(message):
+    print(message)
+
 
 _config = Config()
 
@@ -82,12 +86,6 @@ def start_measurement():
 
 _wm = WLanManager()
 
-def log(message):
-    if _csv is not None:
-        _csv.log(message)
-    else:
-        print(message)
-
 def enable_ap(pin=None):
     global _wm, loop_run, _wlan
     print("Called. Pin {}.".format(pin))
@@ -110,8 +108,6 @@ if _config.get_value('general', 'general', 'button_ap_enabled'):
 
 rtc = machine.RTC()
 rtc.init(time.gmtime(_config.get_value('general', 'general', 'initial_time')))
-
-_csv  = logger.csv
 
 print("SSID: {}".format(_config.get_value('networking', 'accesspoint', 'ssid')))
 log("Cause of restart: {}".format(reset_causes[machine.reset_cause()]))
