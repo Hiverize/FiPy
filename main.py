@@ -1,5 +1,6 @@
 import binascii
 import gc
+import logger
 import machine
 import micropython
 import network
@@ -144,6 +145,9 @@ if _config.get_value('general', 'general', 'button_ap_enabled'):
     button_ap.callback(machine.Pin.IRQ_RISING,
                        handler=enable_ap)
 
+# Initial SSID scan
+no_ssids = _wm.scan()
+log("{:d} SSIDS found".format(no_ssids))
 
 rtc = machine.RTC()
 rtc.init(time.gmtime(_config.get_value('general', 'general', 'initial_time')))
