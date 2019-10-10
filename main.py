@@ -30,7 +30,7 @@ reset_causes = {
 _config = Config()
 _ds_positions = {v: k for k, v in
                  _config.get_value('sensors', 'ds1820', 'positions').items()}
-
+_wm = WLanManager()
 _wlan = network.WLAN(id=0)
 
 measurement_interval = _config.get_value('general', 'general', 'measurement_interval')
@@ -101,7 +101,6 @@ def start_measurement():
 
         # Collect garbage
         gc.collect()
-        #log("After Collection: Alloc: {}, Free: {}".format(gc.mem_alloc(), gc.mem_free()))
         micropython.mem_info()
         ms_gc = perf.read_ms() - ms_log_data
 
@@ -126,8 +125,6 @@ def start_measurement():
             time.sleep_ms(int(time_until_measurement))
 
 
-_wm = WLanManager()
-
 def enable_ap(pin=None):
     global _wm, loop_run, _wlan
     print("Called. Pin {}.".format(pin))
@@ -151,23 +148,28 @@ if _config.get_value('general', 'general', 'button_ap_enabled'):
 rtc = machine.RTC()
 rtc.init(time.gmtime(_config.get_value('general', 'general', 'initial_time')))
 
-print("SSID: {}".format(_config.get_value('networking', 'accesspoint', 'ssid')))
+log("AP SSID: {}".format(_config.get_value('networking', 'accesspoint', 'ssid')))
 log("Cause of restart: {}".format(reset_causes[machine.reset_cause()]))
-log("Starting...")
+
 # if the reset cause is not pressing the power button or reconnecting power
 if (machine.reset_cause() != 0 or
         _config.get_value('general', 'general', 'button_ap_enabled')):
+    log("Starting measurement setup...")
     try:
         if _config.get_value('networking', 'wlan', 'enabled'):
+            log("WLan is enabled, trying to connect.")
             _wm.enable_client()
             _beep = logger.beep
+
             if _wlan.mode() == network.WLAN.STA and _wlan.isconnected():
                 try:
                     rtc.ntp_sync("pool.ntp.org")
                 except:
                     pass
+
                 start_measurement()
             else:
+                log("No network connection.")
                 if ((_config.get_value('networking', 'accesspoint', 'enabled')
                         or _csv is None)
                         and not _config.get_value('general', 'general', 'button_ap_enabled')):
@@ -175,15 +177,14 @@ if (machine.reset_cause() != 0 or
                 else:
                     start_measurement()
         else:
+            log("No network connection.")
             _wlan.deinit()
             start_measurement()
-    except OSError as e:
-        print(e)
-        print("error. reset machine")
-        machine.reset()
+
     except:
-        print(sys.exc_info()[0])
-        print("error. reset machine")
+        log("Error, dumping memory")
+        log(sys.exc_info())
+        micropython.mem_info(True)
         machine.reset()
 else: # if the reset cause is pressing the power button or reconnecting power
     enable_ap()
