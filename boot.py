@@ -34,11 +34,11 @@ print("Starting boot process...")
 pycom.rgbled(0x111100)
 
 ###############################################################################
-# Enable automatic start of WLan device                                      #
+# Disable automatic start of WLan device                                      #
 ###############################################################################
 
 if not pycom.wifi_on_boot():
-    pycom.wifi_on_boot(True)
+    pycom.wifi_on_boot(False)
 
 ###############################################################################
 # Finished boot process                                                       #
