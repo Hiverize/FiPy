@@ -55,7 +55,7 @@ def start_measurement():
         # Measure all enabled sensors
         data = {}
 
-                # Start DS1820 conversion
+        # Start DS1820 conversion
         if ds1820 is not None:
             for rom in ds1820.roms:
                 ds1820.start_conversion(rom=rom)
@@ -189,6 +189,6 @@ if (machine.reset_cause() != 0 or
         log("Error, dumping memory")
         log(sys.exc_info())
         micropython.mem_info(True)
-        machine.reset()
+        #machine.reset()
 else: # if the reset cause is pressing the power button or reconnecting power
     enable_ap()
