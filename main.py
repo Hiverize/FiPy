@@ -1,17 +1,16 @@
-import time
-import machine
 import binascii
-import uos
+import machine
 import network
 import pycom
 import sys
+import time
+import uos
 
-from sensors import ds1820, hx711, bme280
 import logger
 import webserver
-from wlanmanager import WLanManager
-
 from config import Config
+from sensors import ds1820, hx711, bme280
+from wlanmanager import WLanManager
 
 _config = Config()
 
