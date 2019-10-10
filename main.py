@@ -35,6 +35,7 @@ _wlan = network.WLAN(id=0)
 
 measurement_interval = _config.get_value('general', 'general', 'measurement_interval')
 loop_run = True
+cycle = 0 
 
 def start_measurement():
     perf = machine.Timer.Chrono()
@@ -79,8 +80,12 @@ def start_measurement():
         perf.stop()
         time_elapsed = perf.read()
         perf.reset()
+        cycle += 1
         time_until_measurement = measurement_interval - time_elapsed
-        print('Seconds elapsed: {:.2f}s, time until next measurement: {:.2f}s'.format(time_elapsed, time_until_measurement))
+        print("#{:d}, Seconds elapsed: {:.3f}s, "
+              "time until next measurement: {:.3f}s".format(cycle,
+                                                            time_elapsed,
+                                                            time_until_measurement))
         if time_until_measurement > 0:
             time.sleep_ms(int(time_until_measurement * 1000))
 
