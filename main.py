@@ -1,5 +1,4 @@
 import time
-from machine import Timer, RTC
 import machine
 import binascii
 import uos
@@ -34,7 +33,7 @@ measurement_interval = _config.get_value('general', 'general', 'measurement_inte
 loop_run = True
 
 def start_measurement():
-    perf = Timer.Chrono()
+    perf = machine.Timer.Chrono()
     global loop_run
     pycom.heartbeat(False)
     pycom.rgbled(0x000000)
@@ -110,7 +109,7 @@ if _config.get_value('general', 'general', 'button_ap_enabled'):
                        handler=enable_ap)
 
 
-rtc = RTC()
+rtc = machine.RTC()
 rtc.init(time.gmtime(_config.get_value('general', 'general', 'initial_time')))
 
 _csv  = logger.csv
