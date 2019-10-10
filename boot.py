@@ -15,7 +15,7 @@ gc.disable()
 ###############################################################################
 
 if pycom.lte_modem_en_on_boot():
-    print("LTE mode")
+    print("Disabling LTE modem.")
     pycom.lte_modem_en_on_boot(False)
 
 ###############################################################################
