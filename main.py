@@ -1,5 +1,7 @@
 import binascii
+import gc
 import machine
+import micropython
 import network
 import pycom
 import sys
@@ -16,13 +18,6 @@ def log(message):
     print(message)
 
 
-_config = Config()
-
-_wlan = network.WLAN(id=0)
-
-_ds_positions = {v: k for k, v in
-                 _config.get_value('sensors', 'ds1820', 'positions').items()}
-
 reset_causes = {
     machine.PWRON_RESET: 'PWRON', # Press reset button on FiPy
     machine.HARD_RESET: 'HARD',
@@ -31,6 +26,12 @@ reset_causes = {
     machine.SOFT_RESET: 'SOFT',
     machine.BROWN_OUT_RESET: 'BROWN_OUT'
 }
+
+_config = Config()
+_ds_positions = {v: k for k, v in
+                 _config.get_value('sensors', 'ds1820', 'positions').items()}
+
+_wlan = network.WLAN(id=0)
 
 measurement_interval = _config.get_value('general', 'general', 'measurement_interval')
 loop_run = True
