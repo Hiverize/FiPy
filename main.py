@@ -37,28 +37,30 @@ measurement_interval = _config.get_value('general', 'general', 'measurement_inte
 loop_run = True
 cycle = 0 
 
+
 def start_measurement():
+    global cycle, loop_run
+
     perf = machine.Timer.Chrono()
-    global loop_run
     pycom.heartbeat(False)
     pycom.rgbled(0x000000)
 
+    log("Memory dump on startup:")
+    micropython.mem_info(True)
+
     while loop_run:
         perf.start()
+        
         # Measure all enabled sensors
         data = {}
+
+                # Start DS1820 conversion
         if ds1820 is not None:
             for rom in ds1820.roms:
                 ds1820.start_conversion(rom=rom)
-            time.sleep_ms(750)
-            for rom in ds1820.roms:
-                try:
-                    ds_measurement = ds1820.read_temp_async(rom=rom)
-                    ds_name = binascii.hexlify(rom).decode('utf-8')
-                    if ds_name in _ds_positions:
-                        data[_ds_positions[ds_name]] = ds_measurement
-                except:
-                    log("Did not find rom")
+        ms_conversion_start = perf.read_ms()
+
+        # Read data from BME280
         if bme280 is not None:
             try:
                 (data['t'],
@@ -67,27 +69,61 @@ def start_measurement():
                 data['p'] = data['p']/100 # Pa to mBar
             except:
                 log("BME280 not measuring.")
+        ms_bme_read = perf.read_ms() - ms_conversion_start
+
+        # Read data from HX711
         if hx711 is not None:
-            data['weight_kg'] = hx711.get_value(times=5)
+            data['weight_kg'] = hx711.get_value(times=1)
+        ms_hx_read = perf.read_ms() - ms_bme_read
+
+        # Read data from DS1820
+        if ds1820 is not None and ds1820.roms:
+            ms_to_conversion = 750 - perf.read_ms()
+            if ms_to_conversion > 0:
+                time.sleep_ms(int(ms_to_conversion))
+            for rom in ds1820.roms:
+                try:
+                    ds_measurement = ds1820.read_temp_async(rom=rom)
+                    ds_name = binascii.hexlify(rom).decode('utf-8')
+                    if ds_name in _ds_positions:
+                        data[_ds_positions[ds_name]] = ds_measurement
+                except:
+                    log("Did not find rom.")
+        ms_ds_read = perf.read_ms() - ms_hx_read
 
         # Log measured values
-        perf.start()
-        if _csv is not None:
-            _csv.add_dict(data)
-        if _wlan.mode() == network.WLAN.STA and _wlan.isconnected() and _beep is not None:
+        if (_wlan.mode() == network.WLAN.STA
+                and _wlan.isconnected()
+                and _beep is not None):
             _beep.add(data)
-        print(data)
+        log(data)
+        ms_log_data = perf.read_ms() - ms_ds_read
+
+        # Collect garbage
+        gc.collect()
+        #log("After Collection: Alloc: {}, Free: {}".format(gc.mem_alloc(), gc.mem_free()))
+        micropython.mem_info()
+        ms_gc = perf.read_ms() - ms_log_data
+
         perf.stop()
         time_elapsed = perf.read()
+        time_until_measurement = measurement_interval * 1000 - time_elapsed
         perf.reset()
         cycle += 1
-        time_until_measurement = measurement_interval - time_elapsed
-        print("#{:d}, Seconds elapsed: {:.3f}s, "
-              "time until next measurement: {:.3f}s".format(cycle,
-                                                            time_elapsed,
-                                                            time_until_measurement))
+        log("#{}, Seconds elapsed: {:.3f}s,"
+            "time until next measurement: {:.3f}s".format(cycle, 
+                                                          time_elapsed/1000,
+                                                          time_until_measurement/1000))
+        log("DS1820: {:.0f}ms + {:.0f}ms, BME280: {:.0f}ms, HX711: {:.0f}ms "
+            "Log: {:.0f}ms, GC: {:.0f}ms".format(ms_conversion_start,
+                                             ms_ds_read,
+                                             ms_bme_read,
+                                             ms_hx_read,
+                                             ms_log_data,
+                                             ms_gc))
+
         if time_until_measurement > 0:
-            time.sleep_ms(int(time_until_measurement * 1000))
+            time.sleep_ms(int(time_until_measurement))
 
 
 _wm = WLanManager()
