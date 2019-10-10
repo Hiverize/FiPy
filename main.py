@@ -106,11 +106,11 @@ def start_measurement():
         ms_gc = perf.read_ms() - ms_log_data
 
         perf.stop()
-        time_elapsed = perf.read()
+        time_elapsed = perf.read_ms()
         time_until_measurement = measurement_interval * 1000 - time_elapsed
         perf.reset()
         cycle += 1
-        log("#{}, Seconds elapsed: {:.3f}s,"
+        log("#{:d}, Seconds elapsed: {:.3f}s,"
             "time until next measurement: {:.3f}s".format(cycle, 
                                                           time_elapsed/1000,
                                                           time_until_measurement/1000))
