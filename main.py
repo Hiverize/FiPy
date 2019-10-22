@@ -2,6 +2,7 @@ import binascii
 import gc
 import logger
 import machine
+from machine import Pin, I2C
 import micropython
 import network
 import pycom
@@ -9,9 +10,10 @@ import sys
 import time
 import uos
 
-import webserver
+
 from config import Config
 from sensors import ds1820, hx711, bme280
+import sensors.ssd1306
 from wlanmanager import WLanManager
 
 
@@ -36,8 +38,14 @@ _wlan = network.WLAN(id=0)
 
 measurement_interval = _config.get_value('general', 'general', 'measurement_interval')
 loop_run = True
-cycle = 0 
+cycle = 0
 
+oled = _config.get_value('general', 'general', 'oled')
+if oled:
+    i2c = I2C(0, I2C.MASTER, pins=('P9', 'P10'))       # PyCom FiPy
+    _oled = sensors.ssd1306.SSD1306_I2C(128, 64, i2c)           # x, y, bus
+    _oled.fill(1)
+    _oled.show()
 
 def start_measurement():
     global cycle, loop_run
@@ -51,7 +59,7 @@ def start_measurement():
 
     while loop_run:
         perf.start()
-        
+
         # Measure all enabled sensors
         data = {}
 
@@ -92,6 +100,37 @@ def start_measurement():
                     log("Did not find rom.")
         ms_ds_read = perf.read_ms() - ms_hx_read
 
+        if oled:
+            _oled.fill(0)                                         # alles aus
+            #oled.text("BOB     hh:mm:ss",   0,  0)               # Textausgabe
+            #oled.text(str(counter),        30,  0)
+            _oled.text("Waage           " ,  0,  9)
+            if 'weight_kg' in data:
+                _oled.text(str(round(data['weight_kg'],1)),       64,  9)
+            _oled.text("kg",               100,  9)
+            _oled.text("BME280          " ,  0, 18)
+            if 't' in data:
+                _oled.text(str(round(data['t'],1))     ,  0, 27)
+            if 'p' in data:
+                _oled.text(str(round(data['p'],1))     , 40, 27)
+            if 'h' in data:
+                _oled.text(str(round(data['h'],1))     , 95, 27)
+            _oled.text("DS18B20         " ,  0, 36)
+            if 't_i_1' in data:
+                _oled.text(str(round(data['t_i_1'],1)),  0, 45)
+            if 't_i_2' in data:
+                _oled.text(str(round(data['t_i_2'],1)), 50, 45)
+            if 't_i_3' in data:
+                _oled.text(str(round(data['t_i_3'],1)), 95, 45)
+            if 't_i_4' in data:
+                _oled.text(str(round(data['t_i_4'],1)),  0, 54)
+            if 't_i_5' in data:
+                _oled.text(str(round(data['t_i_5'],1)), 50, 54)
+            if 't_o' in data:
+                _oled.text(str(round(data['t_o'],1)), 95, 54)
+            _oled.show()                                         # anzeigen
+
+
         # Log measured values
         if (_wlan.mode() == network.WLAN.STA
                 and _wlan.isconnected()
@@ -111,7 +150,7 @@ def start_measurement():
         perf.reset()
         cycle += 1
         log("#{:d}, Seconds elapsed: {:.3f}s,"
-            "time until next measurement: {:.3f}s".format(cycle, 
+            "time until next measurement: {:.3f}s".format(cycle,
                                                           time_elapsed/1000,
                                                           time_until_measurement/1000))
         log("DS1820: {:.0f}ms + {:.0f}ms, BME280: {:.0f}ms, HX711: {:.0f}ms "
@@ -127,6 +166,7 @@ def start_measurement():
 
 
 def enable_ap(pin=None):
+    import webserver
     global _wm, loop_run, _wlan
     print("Called. Pin {}.".format(pin))
     if not _wlan.mode == network.WLAN.AP:

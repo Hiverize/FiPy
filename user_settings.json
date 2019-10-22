@@ -1,29 +1,13 @@
-{
-    "sensors":{
+{"sensors":{
         "ds1820":{
             "positions":{
-                "t_o":"",
-                "t_i_1":"28b9c47997040302",
-                "t_i_2":"28ca84799704032a",
-                "t_i_3":"28830d79970403f1",
-                "t_i_4":"2850a6799704032f",
-                "t_i_5":"2890f779970403e8"
+                "t_o":"28770b79970403c3",
+                "t_i_1":"2803d17997040364",
+                "t_i_2":"280dad799704033b",
+                "t_i_3":"28b97a79970403ef",
+                "t_i_4":"28717279970403ef",
+                "t_i_5":"28365d7997040388"
             }
-        }
-    },
-    "telemetry":{
-        "beep":{
-            "server": "https://beta.bee-observer.org",
-            "sensor_key":"Abcdefghijklmnop"
-        }
-    },
-    "networking":{
-        "wlan":{
-            "available":[],
-            "ssid":"mitmproxy",
-            "encryption":"3",
-            "password":"hiverize",
-            "enabled":true
         }
     }
 }
