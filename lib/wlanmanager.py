@@ -29,12 +29,37 @@ class WLanManager():
         self.wlan.deinit()
         return len(ssids)
 
+    def configure_antenna(self):
+        # https://community.hiveeyes.org/t/signalstarke-des-wlan-reicht-nicht/2541/11
+        # https://docs.pycom.io/firmwareapi/pycom/network/wlan/
+
+        antenna_external = self.config.get_value('networking', 'wlan', 'antenna_external')
+        print("Using Antenna: ", antenna_external)
+        if antenna_external:
+            antenna_pin = self.config.get_value('networking', 'wlan', 'antenna_pin')
+            print('WiFi: Using external antenna on pin %s', antenna_pin)
+
+            # To use an external antenna, set P12 as output pin.
+            from machine import Pin
+            Pin(antenna_pin, mode=Pin.OUT)(True)
+
+            # Configure external WiFi antenna.
+            self.wlan.antenna(network.WLAN.EXT_ANT)
+            print('Antenna set')
+
+        else:
+            print('WiFi: Using internal antenna')
+            self.wlan.antenna(network.WLAN.INT_ANT)
+            print('Antenna set')
+
+
+
     def enable_ap(self):
 
         # Resolve mode to its numeric code
         mode = network.WLAN.AP
 
-        ssid = self.config.get_value('networking', 'accesspoint', 'ssid') 
+        ssid = self.config.get_value('networking', 'accesspoint', 'ssid')
         password = self.config.get_value('networking', 'accesspoint', 'password')
         encryption = self.config.get_value('networking', 'accesspoint', 'encryption')
         channel = self.config.get_value('networking', 'accesspoint', 'channel')
@@ -67,11 +92,13 @@ class WLanManager():
         # Resolve mode to its numeric code
         mode = network.WLAN.STA
 
-        ssid = self.config.get_value('networking', 'wlan', 'ssid') 
+        ssid = self.config.get_value('networking', 'wlan', 'ssid')
         password = self.config.get_value('networking', 'wlan', 'password')
         encryption = int(self.config.get_value('networking', 'wlan', 'encryption'))
 
-        if not (ssid and encryption and password):
+        self.configure_antenna()
+
+        if not (ssid and password):
             print("No WLan connection configured!")
             return
 

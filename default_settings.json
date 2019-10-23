@@ -8,7 +8,9 @@
             "password": "",
             "timeout": 1000,
             "ifconfig": "dhcp",
-            "available": {}
+            "available": {},
+            "antenna_external": false,
+            "antenna_pin": "P12",
         },
 
         "accesspoint": {
