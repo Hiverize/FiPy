@@ -12,23 +12,6 @@ class WLanManager():
         self.config = Config()
         self.wlan = network.WLAN()
 
-    def scan(self):
-        self.wlan.deinit()
-        time.sleep(1)
-
-        # Scan to find all available SSIDs
-        self.wlan.init(mode=network.WLAN.STA)
-        scan = self.wlan.scan()
-        ssids = [{
-            'ssid': s.ssid,
-            'bssid': binascii.hexlify(s.bssid).decode('utf-8'),
-            'sec': s.sec,
-            'channel': s.channel} for s in scan]
-        self.config.set_value('networking', 'wlan', 'available', ssids)
-        self.config.write()
-        self.wlan.deinit()
-        return len(ssids)
-
     def configure_antenna(self):
         # https://community.hiveeyes.org/t/signalstarke-des-wlan-reicht-nicht/2541/11
         # https://docs.pycom.io/firmwareapi/pycom/network/wlan/
@@ -52,7 +35,22 @@ class WLanManager():
             self.wlan.antenna(network.WLAN.INT_ANT)
             print('Antenna set')
 
-
+    def scan(self):
+        self.wlan.deinit()
+        time.sleep(1)
+        self.configure_antenna()
+        # Scan to find all available SSIDs
+        self.wlan.init(mode=network.WLAN.STA)
+        scan = self.wlan.scan()
+        ssids = [{
+            'ssid': s.ssid,
+            'bssid': binascii.hexlify(s.bssid).decode('utf-8'),
+            'sec': s.sec,
+            'channel': s.channel} for s in scan]
+        self.config.set_value('networking', 'wlan', 'available', ssids)
+        self.config.write()
+        self.wlan.deinit()
+        return len(ssids)
 
     def enable_ap(self):
 
@@ -96,15 +94,14 @@ class WLanManager():
         password = self.config.get_value('networking', 'wlan', 'password')
         encryption = int(self.config.get_value('networking', 'wlan', 'encryption'))
 
-        self.configure_antenna()
-
-        if not (ssid and password):
+        if not (ssid and encryption and password):
             print("No WLan connection configured!")
             return
 
         try:
             self.wlan.deinit()
             time.sleep(1)
+            self.configure_antenna()
             self.wlan.init(mode=mode)
         except:
             print("WLan restart failed!")
