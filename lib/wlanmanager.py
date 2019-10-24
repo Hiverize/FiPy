@@ -71,7 +71,7 @@ class WLanManager():
         password = self.config.get_value('networking', 'wlan', 'password')
         encryption = int(self.config.get_value('networking', 'wlan', 'encryption'))
 
-        if (not ssid) or (not password and enc != 0):
+        if (not ssid) or (not password and encryption != 0):
             print("No WLan connection configured!")
             return
 
