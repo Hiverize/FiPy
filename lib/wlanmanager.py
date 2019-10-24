@@ -111,7 +111,9 @@ class WLanManager():
                                                       password))
             raise
         else:
-            time.sleep(5)
+            for i in range(10):
+                if not self.wlan.isconnected():
+                    time.sleep(1)
 
     def enable_client(self):
         max_retries = 3
