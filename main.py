@@ -42,6 +42,7 @@ wdt = machine.WDT(timeout=60*1000)
 loop_run = True
 cycle = 0 
 
+log(uos.uname())
 
 def start_measurement():
     global cycle, loop_run
