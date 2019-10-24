@@ -35,6 +35,10 @@ _wm = WLanManager()
 _wlan = network.WLAN(id=0)
 
 measurement_interval = _config.get_value('general', 'general', 'measurement_interval')
+
+#set up watchdog, on start timeout only after 1min
+wdt = machine.WDT(timeout=60*1000)
+
 loop_run = True
 cycle = 0 
 
@@ -45,6 +49,9 @@ def start_measurement():
     perf = machine.Timer.Chrono()
     pycom.heartbeat(False)
     pycom.rgbled(0x000000)
+
+    # reconfigure watchdog timeout
+    wdt.init(timeout=3*measurement_interval*1000)
 
     #log("Memory dump on startup:")
     #micropython.mem_info(True)
@@ -122,12 +129,10 @@ def start_measurement():
                                              ms_log_data,
                                              ms_gc))
 
-        if ms_log_data < 40:
-            break
+        wdt.feed()
 
         if time_until_measurement > 0:
-            #time.sleep_ms(int(time_until_measurement))
-            pass
+            time.sleep_ms(int(time_until_measurement))
 
 
 def enable_ap(pin=None):
@@ -160,6 +165,7 @@ log("AP SSID: {}".format(_config.get_value('networking', 'accesspoint', 'ssid'))
 log("Cause of restart: {}".format(reset_causes[machine.reset_cause()]))
 
 log("Starting measurement setup...")
+wdt.feed()
 try:
     if _config.get_value('networking', 'wlan', 'enabled'):
         log("WLan is enabled, trying to connect.")
