@@ -85,7 +85,7 @@ class WLanManager():
         else:
             time.sleep(5)
 
-    def enable_client(self):
+    def _enable_client(self):
 
         # Resolve mode to its numeric code
         mode = network.WLAN.STA
@@ -94,7 +94,7 @@ class WLanManager():
         password = self.config.get_value('networking', 'wlan', 'password')
         encryption = int(self.config.get_value('networking', 'wlan', 'encryption'))
 
-        if not (ssid and encryption and password):
+        if (not ssid) or (not password and encryption != 0):
             print("No WLan connection configured!")
             return
 
@@ -135,4 +135,17 @@ class WLanManager():
                                                       password))
             raise
         else:
-            time.sleep(5)
+            for i in range(10):
+                if not self.wlan.isconnected():
+                    time.sleep(1)
+
+    def enable_client(self):
+        max_retries = 3
+        for i in range(max_retries):
+            try:
+                self._enable_client()
+            except:
+                print("WLan connection failed, retry...")
+            else:
+                if self.wlan.mode() == network.WLAN.STA and self.wlan.isconnected():
+                    return

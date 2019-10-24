@@ -8,7 +8,9 @@
             "password": "",
             "timeout": 1000,
             "ifconfig": "dhcp",
-            "available": {}
+            "available": {},
+            "antenna_external": false,
+            "antenna_pin": "P12"
         },
 
         "accesspoint": {
@@ -62,9 +64,10 @@
     "general": {
         "general": {
             "button_ap_enabled": false,
-            "button_ap_pin": "", 
+            "button_ap_pin": "",
             "initial_time": 1556805688,
-            "measurement_interval": 10
+            "measurement_interval": 5,
+            "oled": false
         }
     }
 }

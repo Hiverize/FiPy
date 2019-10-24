@@ -11,6 +11,7 @@ import time
 import uos
 
 
+import webserver
 from config import Config
 from sensors import ds1820, hx711, bme280
 import sensors.ssd1306
@@ -37,6 +38,10 @@ _wm = WLanManager()
 _wlan = network.WLAN(id=0)
 
 measurement_interval = _config.get_value('general', 'general', 'measurement_interval')
+
+#set up watchdog, on start timeout only after 1min
+wdt = machine.WDT(timeout=60*1000)
+
 loop_run = True
 cycle = 0
 
@@ -47,6 +52,8 @@ if oled:
     _oled.fill(1)
     _oled.show()
 
+log(uos.uname())
+
 def start_measurement():
     global cycle, loop_run
 
@@ -54,8 +61,11 @@ def start_measurement():
     pycom.heartbeat(False)
     pycom.rgbled(0x000000)
 
-    log("Memory dump on startup:")
-    micropython.mem_info(True)
+    # reconfigure watchdog timeout
+    wdt.init(timeout=3*measurement_interval*1000)
+
+    #log("Memory dump on startup:")
+    #micropython.mem_info(True)
 
     while loop_run:
         perf.start()
@@ -161,14 +171,16 @@ def start_measurement():
                                              ms_log_data,
                                              ms_gc))
 
+        wdt.feed()
+
         if time_until_measurement > 0:
             time.sleep_ms(int(time_until_measurement))
 
 
 def enable_ap(pin=None):
-    import webserver
-    global _wm, loop_run, _wlan
+    global _wm, loop_run, _wlan, wdt
     print("Called. Pin {}.".format(pin))
+    wdt.init(timeout=30*60*1000)
     if not _wlan.mode == network.WLAN.AP:
         log("enabled ap")
         pycom.heartbeat(False)
@@ -195,40 +207,36 @@ rtc.init(time.gmtime(_config.get_value('general', 'general', 'initial_time')))
 log("AP SSID: {}".format(_config.get_value('networking', 'accesspoint', 'ssid')))
 log("Cause of restart: {}".format(reset_causes[machine.reset_cause()]))
 
-# if the reset cause is not pressing the power button or reconnecting power
-if (machine.reset_cause() != 0 or
-        _config.get_value('general', 'general', 'button_ap_enabled')):
-    log("Starting measurement setup...")
-    try:
-        if _config.get_value('networking', 'wlan', 'enabled'):
-            log("WLan is enabled, trying to connect.")
-            _wm.enable_client()
-            _beep = logger.beep
+log("Starting measurement setup...")
+wdt.feed()
+try:
+    if _config.get_value('networking', 'wlan', 'enabled'):
+        log("WLan is enabled, trying to connect.")
+        _wm.enable_client()
+        _beep = logger.beep
 
-            if _wlan.mode() == network.WLAN.STA and _wlan.isconnected():
-                try:
-                    rtc.ntp_sync("pool.ntp.org")
-                except:
-                    pass
+        if _wlan.mode() == network.WLAN.STA and _wlan.isconnected():
+            try:
+                rtc.ntp_sync("pool.ntp.org")
+            except:
+                pass
 
-                start_measurement()
-            else:
-                log("No network connection.")
-                if ((_config.get_value('networking', 'accesspoint', 'enabled')
-                        or _csv is None)
-                        and not _config.get_value('general', 'general', 'button_ap_enabled')):
-                    enable_ap()
-                else:
-                    start_measurement()
+            start_measurement()
         else:
             log("No network connection.")
-            _wlan.deinit()
-            start_measurement()
+            if ((_config.get_value('networking', 'accesspoint', 'enabled')
+                    or _csv is None)
+                    and not _config.get_value('general', 'general', 'button_ap_enabled')):
+                enable_ap()
+            else:
+                start_measurement()
+    else:
+        log("No network connection.")
+        _wlan.deinit()
+        start_measurement()
 
-    except:
-        log("Error, dumping memory")
-        log(sys.exc_info())
-        micropython.mem_info(True)
-        #machine.reset()
-else: # if the reset cause is pressing the power button or reconnecting power
-    enable_ap()
+except:
+    log("Error, dumping memory")
+    log(sys.exc_info())
+    micropython.mem_info(True)
+    #machine.reset()
