@@ -137,8 +137,9 @@ def start_measurement():
 
 
 def enable_ap(pin=None):
-    global _wm, loop_run, _wlan
+    global _wm, loop_run, _wlan, wdt
     print("Called. Pin {}.".format(pin))
+    wdt.init(timeout=30*60*1000)
     if not _wlan.mode == network.WLAN.AP:
         log("enabled ap")
         pycom.heartbeat(False)
