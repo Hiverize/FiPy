@@ -46,7 +46,12 @@ class WLanManager():
             'ssid': s.ssid,
             'bssid': binascii.hexlify(s.bssid).decode('utf-8'),
             'sec': s.sec,
-            'channel': s.channel} for s in scan]
+            'channel': s.channel,
+            'rssi': s.rssi} for s in scan]
+        for ssid in ssids:
+            print(ssid['ssid'])
+            for item in ssid:
+                print("{}: {}".format(item,ssid[item]))
         self.config.set_value('networking', 'wlan', 'available', ssids)
         self.config.write()
         self.wlan.deinit()
