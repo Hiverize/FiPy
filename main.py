@@ -201,8 +201,12 @@ if _config.get_value('general', 'general', 'button_ap_enabled'):
 no_ssids = _wm.scan()
 log("{:d} SSIDS found".format(no_ssids))
 
-rtc = machine.RTC()
-rtc.init(time.gmtime(_config.get_value('general', 'general', 'initial_time')))
+try:
+    rtc = machine.RTC()
+    rtc.init(time.gmtime(_config.get_value('general', 'general', 'initial_time')))
+except:
+    log("Time init failed")
+    rtc.init(time.gmtime(1556805688))
 
 log("AP SSID: {}".format(_config.get_value('networking', 'accesspoint', 'ssid')))
 log("Cause of restart: {}".format(reset_causes[machine.reset_cause()]))
