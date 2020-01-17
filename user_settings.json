@@ -1,40 +1,10 @@
 {"networking": {
-
-    "wlan": {
-        "enabled": true,
-        "ssid": "hiverize",
-        "encryption": 0,
-        "password": "",
-        "antenna_external": true,
-        "antenna_pin": "P12",
-    },
-
     "accesspoint": {
         "enabled": true,
-        "ssid": "hiverize-accespoint",
+        "ssid": "Moltebeere",
         "encryption": 3,
         "password": "hiverize",
         "channel": 4
     }
-},
-
-"telemetry": {
-    "beep": {
-        "enabled": true,
-        "server": "https://bee-observer.org",
-        "sensor_key": "Stachelbeere123"
-    }
-},
-  "sensors":{
-        "ds1820":{
-            "positions":{
-                "t_o":"28770b79970403c3",
-                "t_i_1":"2803d17997040364",
-                "t_i_2":"280dad799704033b",
-                "t_i_3":"28b97a79970403ef",
-                "t_i_4":"28717279970403ef",
-                "t_i_5":"28365d7997040388"
-            }
-        }
-    }
+}
 }
