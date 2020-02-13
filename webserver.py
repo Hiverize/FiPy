@@ -2,6 +2,7 @@ import machine
 import time
 import binascii
 
+
 from microWebSrv import MicroWebSrv
 from microDNSSrv import MicroDNSSrv
 
@@ -27,10 +28,13 @@ def measure_ds1820(httpClient, httpResponse, routeArgs):
     sensor = routeArgs['sensor']
     #if hasattr(sensors, sensor):
     if True:
-
+        data = {}
         # Read sensor DS1820
         if sensor == 'ds1820':
-            data = sensors.ds1820.read_all()
+            ds = sensors.ds1820
+            ds.convert_temp()
+            time.sleep_ms(750)
+            data = ds.read_all()
 
 
         # Read sensor HX711
@@ -46,7 +50,6 @@ def measure_ds1820(httpClient, httpResponse, routeArgs):
         # Read sensor BME280
         elif sensor == 'bme280':
             bme = sensors.bme280
-            data = {}
             (data['t'],
             data['p'],
             data['h']) = bme.read_compensated_data()

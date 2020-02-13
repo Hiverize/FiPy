@@ -21,23 +21,23 @@ if _config.get_value('sensors', 'ds1820', 'enabled'):
     roms   = ds1820.scan()
     ds1820.convert_temp()
     time.sleep_ms(750)
-    """ Testausdruck """
-    print('   DS18B20: ', end=' ')
-    for rom in roms:
-        # print(rom)
-        name = binascii.hexlify(rom).decode('utf-8')
-        print( name, end=' ')
-        tmp = ds1820.read_temp(rom)
-        if tmp is not None:
-            ds18b20tmp = int(tmp*10)/10
-        else:
-            ds18b20tmp =  999999
-        print(ds18b20tmp, end=' ')
-    print(' ')
-    if not roms:
-        print('keine DS18B20 gefunden')
-    else:
-        print('   DS18B20:', len(roms), ' mal gefunden')
+    # """ Testausdruck """
+    # print('   DS18B20: ', end=' ')
+    # for rom in roms:
+    #     # print(rom)
+    #     name = binascii.hexlify(rom).decode('utf-8')
+    #     print( name, end=' ')
+    #     tmp = ds1820.read_temp(rom)
+    #     if tmp is not None:
+    #         ds18b20tmp = int(tmp*10)/10
+    #     else:
+    #         ds18b20tmp =  999999
+    #     print(ds18b20tmp, end=' ')
+    # print(' ')
+    # if not roms:
+    #     print('keine DS18B20 gefunden')
+    # else:
+    #     print('   DS18B20:', len(roms), ' mal gefunden')
 else:
     ds1820 = None
 
