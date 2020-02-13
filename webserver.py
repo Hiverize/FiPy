@@ -30,13 +30,8 @@ def measure_ds1820(httpClient, httpResponse, routeArgs):
 
         # Read sensor DS1820
         if sensor == 'ds1820':
-            ds = sensors.ds1820
-            for rom in ds.roms:
-                ds.start_conversion(rom=rom)
-            time.sleep_ms(750)
-            data = {}
-            for rom in ds.roms:
-                data[binascii.hexlify(rom).decode('utf-8')] = ds.read_temp_async(rom=rom)
+            data = sensors.ds1820.read_all()
+
 
         # Read sensor HX711
         elif sensor == 'hx711':

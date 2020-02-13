@@ -1,85 +1,95 @@
-# DS18x20 temperature sensor driver for pycom boards
-# Source: https://github.com/pycom/pycom-libraries/blob/master/examples/DS18X20/onewire.py
-# Licensed under GPLv3
-# Last modified: 08/03/2019 by Vincent Kuhlen
+# DS18x20 temperature sensor driver for MicroPython.
+# MIT license; Copyright (c) 2016 Damien P. George
 
-class DS18X20(object):
+from micropython import const
+import binascii
+
+_CONVERT = const(0x44)
+_RD_SCRATCH = const(0xbe)
+_WR_SCRATCH = const(0x4e)
+
+class DS18X20:
     def __init__(self, onewire):
         self.ow = onewire
-        self.roms = [rom for rom in self.ow.scan() if rom[0] == 0x10 or rom[0] == 0x28]
-        self.fp = True
+        self.buf = bytearray(9)
+
+
+    def scan(self):
+        return [rom for rom in self.ow.scan() if rom[0] == 0x10 or rom[0] == 0x28]
+
+    def convert_temp(self):
+        self.ow.reset(True)
+        self.ow.writebyte(self.ow.SKIP_ROM)
+        self.ow.writebyte(_CONVERT)
+
+    def read_scratch(self, rom):
+        self.ow.reset(True)
+        self.ow.select_rom(rom)
+        self.ow.writebyte(_RD_SCRATCH)
+        self.ow.readinto(self.buf)
+        if self.ow.crc8(self.buf):
+            raise Exception('CRC error')
+        return self.buf
+
+    def write_scratch(self, rom, buf):
+        self.ow.reset(True)
+        self.ow.select_rom(rom)
+        self.ow.writebyte(_WR_SCRATCH)
+        self.ow.write(buf)
+
+#    def read_temp(self, rom):
+#        buf = self.read_scratch(rom)
+#        if rom[0] == 0x10:
+#            if buf[1]:
+#                t = buf[0] >> 1 | 0x80
+#                t = -((~t + 1) & 0xff)
+#            else:
+#                t = buf[0] >> 1
+#            return t - 0.25 + (buf[7] - buf[6]) / buf[7]
+#        else:
+#            t = buf[1] << 8 | buf[0]
+#            if t & 0x8000: # sign bit set
+#                t = -((t ^ 0xffff) + 1)
+#            return t / 16
+
+    def read_temp(self, rom):
         try:
-            1/1
-        except TypeError:
-            self.fp = False # floatingpoint not supported
-
-    def isbusy(self):
-        """
-        Checks wether one of the DS18x20 devices on the bus is busy
-        performing a temperature convertion
-        """
-        return not self.ow.read_bit()
-
-    def start_conversion(self, rom=None):
-        """
-        Start the temp conversion on one DS18x20 device.
-        Pass the 8-byte bytes object with the ROM of the specific device you want to read.
-        If only one DS18x20 device is attached to the bus you may omit the rom parameter.
-        """
-        if (rom==None) and (len(self.roms)>0):
-            rom=self.roms[0]
-        if rom!=None:    
-            rom = rom or self.roms[0]
-            ow = self.ow
-            ow.select_rom(rom)
-            ow.write_byte(0x44)  # Convert Temp
-
-    def read_temp_async(self, rom=None):
-        """
-        Read the temperature of one DS18x20 device if the convertion is complete,
-        otherwise return None.
-        """
-        if self.isbusy():
+            buf = self.read_scratch(rom)
+            if rom[0] == 0x10:
+                if buf[1]:
+                    t = buf[0] >> 1 | 0x80
+                    t = -((~t + 1) & 0xff)
+                else:
+                    t = buf[0] >> 1
+                return t - 0.25 + (buf[7] - buf[6]) / buf[7]
+            elif rom[0] in (0x22, 0x28):
+                t = buf[1] << 8 | buf[0]
+                if t & 0x8000: # sign bit set
+                    t = -((t ^ 0xffff) + 1)
+                return t / 16
+            else:
+                return None
+        except AssertionError:
             return None
-        if (rom==None) and (len(self.roms)>0):
-            rom=self.roms[0]
-        if rom==None:     
-            return None
-        else:
-            ow = self.ow
-            ow.reset()
-            ow.select_rom(rom)
-            ow.write_byte(0xbe)  # Read scratch
-            data = ow.read_bytes(9)
-            return self.convert_temp(rom[0], data)
 
-    def convert_temp(self, rom0, data):
-        """
-        Convert the raw temperature data into degrees celsius and return as a fixed point with 2 decimal places.
-        """
-        temp_lsb = data[0]
-        temp_msb = data[1]
-        if rom0 == 0x10:
-            if temp_msb != 0:
-                # convert negative number
-                temp_read = temp_lsb >> 1 | 0x80  # truncate bit 0 by shifting, fill high bit with 1.
-                temp_read = -((~temp_read + 1) & 0xff) # now convert from two's complement
+    def read_all(self, ds_positions=None):
+        roms = self.scan()
+        data = {}
+        for rom in roms:
+            # print(rom)
+            name = binascii.hexlify(rom).decode('utf-8')
+            # print( name, end=' ')
+            tmp = self.read_temp(rom)
+            if tmp is not None:
+                ds18b20tmp = int(tmp*10)/10
             else:
-                temp_read = temp_lsb >> 1  # truncate bit 0 by shifting
-            count_remain = data[6]
-            count_per_c = data[7]
-            if self.fp:
-                return temp_read - 25 + (count_per_c - count_remain) / count_per_c
+                ds18b20tmp =  999999
+            print(ds18b20tmp, end=' ')
+
+            if ds_positions:
+                if name in ds_positions:
+                    data[ds_positions[name]] = ds18b20tmp
             else:
-                return 100 * temp_read - 25 + (count_per_c - count_remain) // count_per_c
-        elif rom0 == 0x28:
-            temp = None
-            if self.fp:
-                temp = (temp_msb << 8 | temp_lsb) / 16
-            else:
-                temp = (temp_msb << 8 | temp_lsb) * 100 // 16
-            if (temp_msb & 0xf8) == 0xf8: # for negative temperature
-                temp -= 0x1000
-            return temp
-        else:
-            assert False
+                data[name] = ds18b20tmp
+
+        return data

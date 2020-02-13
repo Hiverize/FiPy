@@ -1,120 +1,53 @@
-# OneWire driver for pycom boards
-# Source: https://github.com/pycom/pycom-libraries/blob/master/examples/DS18X20/onewire.py
-# Licensed under GPLv3
+# 1-Wire driver for MicroPython
+# MIT license; Copyright (c) 2016 Damien P. George
 
-import time
-import machine
+from micropython import const
+import _onewire as _ow
+
+class OneWireError(Exception):
+    pass
 
 class OneWire:
-    CMD_SEARCHROM = const(0xf0)
-    CMD_READROM = const(0x33)
-    CMD_MATCHROM = const(0x55)
-    CMD_SKIPROM = const(0xcc)
+    SEARCH_ROM = const(0xf0)
+    MATCH_ROM = const(0x55)
+    SKIP_ROM = const(0xcc)
 
     def __init__(self, pin):
         self.pin = pin
         self.pin.init(pin.OPEN_DRAIN, pin.PULL_UP)
 
-    def reset(self):
-        """
-        Perform the onewire reset function.
-        Returns True if a device asserted a presence pulse, False otherwise.
-        """
-        sleep_us = time.sleep_us
-        disable_irq = machine.disable_irq
-        enable_irq = machine.enable_irq
-        pin = self.pin
+    def reset(self, required=False):
+        reset = _ow.reset(self.pin)
+        if required and not reset:
+            raise OneWireError
+        return reset
 
-        pin(0)
-        sleep_us(480)
-        i = disable_irq()
-        pin(1)
-        sleep_us(60)
-        status = not pin()
-        enable_irq(i)
-        sleep_us(420)
-        return status
+    def readbit(self):
+        return _ow.readbit(self.pin)
 
-    def read_bit(self):
-        sleep_us = time.sleep_us
-        enable_irq = machine.enable_irq
-        pin = self.pin
+    def readbyte(self):
+        return _ow.readbyte(self.pin)
 
-        pin(1) # half of the devices don't match CRC without this line
-        i = machine.disable_irq()
-        pin(0)
-        sleep_us(1)
-        pin(1)
-        sleep_us(1)
-        value = pin()
-        enable_irq(i)
-        sleep_us(40)
-        return value
+    def readinto(self, buf):
+        for i in range(len(buf)):
+            buf[i] = _ow.readbyte(self.pin)
 
-    def read_byte(self):
-        value = 0
-        for i in range(8):
-            value |= self.read_bit() << i
-        return value
+    def writebit(self, value):
+        return _ow.writebit(self.pin, value)
 
-    def read_bytes(self, count):
-        buf = bytearray(count)
-        for i in range(count):
-            buf[i] = self.read_byte()
-        return buf
+    def writebyte(self, value):
+        return _ow.writebyte(self.pin, value)
 
-    def write_bit(self, value):
-        sleep_us = time.sleep_us
-        pin = self.pin
-
-        i = machine.disable_irq()
-        pin(0)
-        sleep_us(1)
-        pin(value)
-        sleep_us(60)
-        pin(1)
-        sleep_us(1)
-        machine.enable_irq(i)
-
-    def write_byte(self, value):
-        for i in range(8):
-            self.write_bit(value & 1)
-            value >>= 1
-
-    def write_bytes(self, buf):
+    def write(self, buf):
         for b in buf:
-            self.write_byte(b)
+            _ow.writebyte(self.pin, b)
 
     def select_rom(self, rom):
-        """
-        Select a specific device to talk to. Pass in rom as a bytearray (8 bytes).
-        """
         self.reset()
-        self.write_byte(CMD_MATCHROM)
-        self.write_bytes(rom)
-
-    def crc8(self, data):
-        """
-        Compute CRC
-        """
-        crc = 0
-        for i in range(len(data)):
-            byte = data[i]
-            for b in range(8):
-                fb_bit = (crc ^ byte) & 0x01
-                if fb_bit == 0x01:
-                    crc = crc ^ 0x18
-                crc = (crc >> 1) & 0x7f
-                if fb_bit == 0x01:
-                    crc = crc | 0x80
-                byte = byte >> 1
-        return crc
+        self.writebyte(MATCH_ROM)
+        self.write(rom)
 
     def scan(self):
-        """
-        Return a list of ROMs for all attached devices.
-        Each ROM is returned as a bytes object of 8 bytes.
-        """
         devices = []
         diff = 65
         rom = False
@@ -129,7 +62,7 @@ class OneWire:
     def _search_rom(self, l_rom, diff):
         if not self.reset():
             return None, 0
-        self.write_byte(CMD_SEARCHROM)
+        self.writebyte(SEARCH_ROM)
         if not l_rom:
             l_rom = bytearray(8)
         rom = bytearray(8)
@@ -138,8 +71,8 @@ class OneWire:
         for byte in range(8):
             r_b = 0
             for bit in range(8):
-                b = self.read_bit()
-                if self.read_bit():
+                b = self.readbit()
+                if self.readbit():
                     if b: # there are no devices or there is an error on the bus
                         return None, 0
                 else:
@@ -147,9 +80,12 @@ class OneWire:
                         if diff > i or ((l_rom[byte] & (1 << bit)) and diff != i):
                             b = 1
                             next_diff = i
-                self.write_bit(b)
+                self.writebit(b)
                 if b:
                     r_b |= 1 << bit
                 i -= 1
             rom[byte] = r_b
         return rom, next_diff
+
+    def crc8(self, data):
+        return _ow.crc8(data)

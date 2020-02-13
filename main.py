@@ -1,4 +1,4 @@
-import binascii
+# python imports
 import gc
 import logger
 import machine
@@ -10,18 +10,23 @@ import sys
 import time
 import uos
 
-
+# own code imports
 import webserver
 from config import Config
-from sensors import ds1820, hx711, bme280
+from sensors import hx711, bme280
 import sensors.ssd1306
 from wlanmanager import WLanManager
 
+from lib.onewire     import OneWire
+from sensors.ds18x20 import DS18X20
 
+
+
+# Log method
 def log(message):
     print(message)
 
-
+# needed for boards without buttons
 reset_causes = {
     machine.PWRON_RESET: 'PWRON', # Press reset button on FiPy
     machine.HARD_RESET: 'HARD',
@@ -31,6 +36,7 @@ reset_causes = {
     machine.BROWN_OUT_RESET: 'BROWN_OUT'
 }
 
+# init
 _config = Config()
 _ds_positions = {v: k for k, v in
                  _config.get_value('sensors', 'ds1820', 'positions').items()}
@@ -52,14 +58,26 @@ if oled:
     _oled.fill(1)
     _oled.show()
 
+# DS18B20 new
+if _config.get_value('sensors', 'ds1820', 'enabled'):
+    owPin  = _config.get_value('sensors', 'ds1820', 'pin')
+    ow     = OneWire(Pin(owPin))
+    ds1820 = DS18X20(ow)
+    roms   = ds1820.scan()
+else:
+    ds1820 = None
+
 log(uos.uname())
 
+
+
+# start main measurement cycle
 def start_measurement():
     global cycle, loop_run
 
     perf = machine.Timer.Chrono()
-    pycom.heartbeat(False)
-    pycom.rgbled(0x000000)
+    #pycom.heartbeat(False)
+    #pycom.rgbled(0x007f00)
 
     # reconfigure watchdog timeout
     wdt.init(timeout=3*measurement_interval*1000)
@@ -68,6 +86,7 @@ def start_measurement():
     #micropython.mem_info(True)
 
     while loop_run:
+        # start time measuring
         perf.start()
 
         # Measure all enabled sensors
@@ -75,8 +94,9 @@ def start_measurement():
 
         # Start DS1820 conversion
         if ds1820 is not None:
-            for rom in ds1820.roms:
-                ds1820.start_conversion(rom=rom)
+                    ds1820.convert_temp()
+                    time.sleep_ms(750)
+                    print('   DS18B20: Messung gestartet...')
         ms_conversion_start = perf.read_ms()
 
         # Read data from BME280
@@ -96,18 +116,24 @@ def start_measurement():
         ms_hx_read = perf.read_ms() - ms_bme_read
 
         # Read data from DS1820
-        if ds1820 is not None and ds1820.roms:
-            ms_to_conversion = 750 - perf.read_ms()
-            if ms_to_conversion > 0:
-                time.sleep_ms(int(ms_to_conversion))
-            for rom in ds1820.roms:
-                try:
-                    ds_measurement = ds1820.read_temp_async(rom=rom)
-                    ds_name = binascii.hexlify(rom).decode('utf-8')
-                    if ds_name in _ds_positions:
-                        data[_ds_positions[ds_name]] = ds_measurement
-                except:
-                    log("Did not find rom.")
+        # if ds1820 is not None and ds1820.roms:
+        #     ms_to_conversion = 750 - perf.read_ms()
+        #     if ms_to_conversion > 0:
+        #         time.sleep_ms(int(ms_to_conversion))
+        #     for rom in ds1820.roms:
+        #         try:
+        #             ds_measurement = ds1820.read_temp_async(rom=rom)
+        #             ds_name = binascii.hexlify(rom).decode('utf-8')
+        #             if ds_name in _ds_positions:
+        #                 data[_ds_positions[ds_name]] = ds_measurement
+        #         except:
+        #             log("Did not find rom.")
+        # ms_ds_read = perf.read_ms() - ms_hx_read
+        if ds1820 is not None:
+            print('   DS18B20:', end=' ')
+            ds_data = ds1820.read_all(_ds_positions)
+            data.update(ds_data)
+            print(' ')
         ms_ds_read = perf.read_ms() - ms_hx_read
 
         if oled:
@@ -141,7 +167,7 @@ def start_measurement():
             _oled.show()                                         # anzeigen
 
 
-        # Log measured values
+        # Log measured values, if possible
         if (_wlan.mode() == network.WLAN.STA
                 and _wlan.isconnected()
                 and _beep is not None):
@@ -177,30 +203,31 @@ def start_measurement():
             time.sleep_ms(int(time_until_measurement))
 
 
+def ap_already_enabled():
+    log("ap already enabled.")
+
+# enable ap
 def enable_ap(pin=None):
-    global _wm, loop_run, _wlan, wdt
+    global _wm, loop_run, _wlan, wdt, button_ap
+    button_ap.callback(handler=ap_already_enabled)
     print("Called. Pin {}.".format(pin))
     wdt.init(timeout=30*60*1000)
-    if not _wlan.mode == network.WLAN.AP:
-        log("enabled ap")
-        pycom.heartbeat(False)
-        pycom.rgbled(0x111100)
+    if not _wlan.mode() == network.WLAN.AP:
         loop_run = False
         getattr(_wm, 'enable_ap')()
+        log("enabled ap")
+        #pycom.heartbeat(False)
+        #pycom.rgbled(0x007f00)
     if not webserver.mws.IsStarted():
         webserver.mws.Start(threaded=True)
 
-if _config.get_value('general', 'general', 'button_ap_enabled'):
-    button_ap = machine.Pin(_config.get_value('general', 'general', 'button_ap_pin'),
-                            mode=machine.Pin.IN,
-                            pull=machine.Pin.PULL_UP)
-    button_ap.callback(machine.Pin.IRQ_RISING,
-                       handler=enable_ap)
+###### run this #######
 
 # Initial SSID scan
 no_ssids = _wm.scan()
 log("{:d} SSIDS found".format(no_ssids))
 
+# init time
 try:
     rtc = machine.RTC()
     rtc.init(time.gmtime(_config.get_value('general', 'general', 'initial_time')))
@@ -211,6 +238,16 @@ except:
 log("AP SSID: {}".format(_config.get_value('networking', 'accesspoint', 'ssid')))
 log("Cause of restart: {}".format(reset_causes[machine.reset_cause()]))
 
+log("switching to ap mode is now possible")
+pycom.rgbled(0x007f00)
+if _config.get_value('general', 'general', 'button_ap_enabled'):
+    button_ap = machine.Pin(_config.get_value('general', 'general', 'button_ap_pin'),
+                            mode=machine.Pin.IN,
+                            pull=machine.Pin.PULL_UP)
+    button_ap.callback(machine.Pin.IRQ_RISING,
+                       handler=enable_ap)
+
+
 log("Starting measurement setup...")
 wdt.feed()
 try:
@@ -219,12 +256,12 @@ try:
         _wm.enable_client()
         _beep = logger.beep
 
+        # add to time server
         if _wlan.mode() == network.WLAN.STA and _wlan.isconnected():
             try:
                 rtc.ntp_sync("pool.ntp.org")
             except:
                 pass
-
             start_measurement()
         else:
             log("No network connection.")
@@ -235,7 +272,7 @@ try:
             else:
                 start_measurement()
     else:
-        log("No network connection.")
+        log("Measuring without network connection.")
         _wlan.deinit()
         start_measurement()
 

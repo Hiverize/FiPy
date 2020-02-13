@@ -1,32 +1,65 @@
 from machine import Pin, I2C
 import time
+import binascii
 
 from config import Config
-import onewire
-import sensors.ds18x20
+#import onewire
+#import sensors.ds18x20
+from lib.onewire     import OneWire
+from sensors.ds18x20 import DS18X20
+
 import sensors.bme280
 import sensors.hx711
 
 _config = Config()
 
+# DS18B20 new
 if _config.get_value('sensors', 'ds1820', 'enabled'):
-    ow = onewire.OneWire(
-        Pin(_config.get_value('sensors', 'ds1820', 'pin')))
-    ds1820 = sensors.ds18x20.DS18X20(ow)
-    time.sleep_ms(200)
-    i = 0
-    while (i < 3 and len(ds1820.roms) < 6):
-        time.sleep_ms(100)
-        ds1820.__init__(ow)
-        time.sleep_ms(400)
-        i += 1
-    if not ds1820.roms:
-        print("No DS1820 found. Is it connected properly?")
+    owPin  = _config.get_value('sensors', 'ds1820', 'pin')
+    ow     = OneWire(Pin(owPin))
+    ds1820 = DS18X20(ow)
+    roms   = ds1820.scan()
+    ds1820.convert_temp()
+    time.sleep_ms(750)
+    """ Testausdruck """
+    print('   DS18B20: ', end=' ')
+    for rom in roms:
+        # print(rom)
+        name = binascii.hexlify(rom).decode('utf-8')
+        print( name, end=' ')
+        tmp = ds1820.read_temp(rom)
+        if tmp is not None:
+            ds18b20tmp = int(tmp*10)/10
+        else:
+            ds18b20tmp =  999999
+        print(ds18b20tmp, end=' ')
+    print(' ')
+    if not roms:
+        print('keine DS18B20 gefunden')
     else:
-        print("Found {} DS1820.".format(len(ds1820.roms)))
-
+        print('   DS18B20:', len(roms), ' mal gefunden')
 else:
     ds1820 = None
+
+#old
+#if _config.get_value('sensors', 'ds1820', 'enabled'):
+#    ow = onewire.OneWire(
+#        Pin(_config.get_value('sensors', 'ds1820', 'pin')))
+#    ds1820 = sensors.ds18x20.DS18X20(ow)
+#    time.sleep_ms(200)
+#    i = 0
+#    while (i < 3 and len(ds1820.roms) < 6):
+#        time.sleep_ms(100)
+#        ds1820.__init__(ow)
+#        time.sleep_ms(400)
+#        i += 1
+#    if not ds1820.roms:
+#        print("No DS1820 found. Is it connected properly?")
+#    else:
+#        print("Found {} DS1820.".format(len(ds1820.roms)))
+#
+#else:
+#    ds1820 = None
 
 if _config.get_value('sensors', 'hx711', 'enabled'):
     hx711 = sensors.hx711.HX711(
