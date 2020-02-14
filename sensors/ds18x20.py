@@ -10,6 +10,7 @@ _WR_SCRATCH = const(0x4e)
 
 class DS18X20:
     def __init__(self, onewire):
+        print("init ds")
         self.ow = onewire
         self.buf = bytearray(9)
 

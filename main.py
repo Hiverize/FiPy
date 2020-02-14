@@ -40,7 +40,7 @@ reset_causes = {
 _config = Config()
 _ds_positions = {v: k for k, v in
                  _config.get_value('sensors', 'ds1820', 'positions').items()}
-_wm = WLanManager()
+_wm = WLanManager(_config)
 _wlan = network.WLAN(id=0)
 
 measurement_interval = _config.get_value('general', 'general', 'measurement_interval')

@@ -5,7 +5,7 @@ import machine
 class Config:
     def __init__(self):
         self.path_user_settings = '/flash/user_settings.json'
-        self.path_default_settings = '/flash/default_settings.json' 
+        self.path_default_settings = '/flash/default_settings.json'
         self.read_settings()
 
     def _read_json_file(self, path):
@@ -66,3 +66,4 @@ class Config:
             self.write(i=i+1)
         elif i >= 3:
             print("Error: Unable to save settings.")
+        self.user_settings = self._read_json_file(self.path_user_settings)

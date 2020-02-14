@@ -8,8 +8,8 @@ from config import Config
 
 class WLanManager():
 
-    def __init__(self):
-        self.config = Config()
+    def __init__(self, config):
+        self.config = config
         self.wlan = network.WLAN()
 
     def configure_antenna(self):

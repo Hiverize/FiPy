@@ -13,6 +13,7 @@ import sensors.hx711
 
 _config = Config()
 
+print("init sensors")
 # DS18B20 new
 if _config.get_value('sensors', 'ds1820', 'enabled'):
     owPin  = _config.get_value('sensors', 'ds1820', 'pin')
