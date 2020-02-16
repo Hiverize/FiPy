@@ -209,8 +209,9 @@ def ap_already_enabled():
 # enable ap
 def enable_ap(pin=None):
     global _wm, loop_run, _wlan, wdt, button_ap
-    button_ap.callback(handler=ap_already_enabled)
-    print("Called. Pin {}.".format(pin))
+    if _config.get_value('general', 'general', 'button_ap_enabled'):
+        button_ap.callback(handler=ap_already_enabled)
+        print("Called. Pin {}.".format(pin))
     wdt.init(timeout=30*60*1000)
     if not _wlan.mode() == network.WLAN.AP:
         loop_run = False
