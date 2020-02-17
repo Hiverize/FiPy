@@ -262,7 +262,13 @@ try:
                 rtc.ntp_sync("pool.ntp.org")
             except:
                 pass
-            start_measurement()
+            if (reset_causes[machine.reset_cause()]=='PWRON' 
+                        and not _config.get_value('general', 'general', 'button_ap_enabled')):
+                    enable_ap()
+                    wdt.init(timeout=10*60*1000)
+                    log("starting Accesspoint after PowerOn for 10 min")
+            else:
+                start_measurement()
         else:
             log("No network connection.")
             if ((_config.get_value('networking', 'accesspoint', 'enabled')
