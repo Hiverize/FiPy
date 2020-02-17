@@ -37,7 +37,7 @@ reset_causes = {
 }
 
 # init
-_config = Config()
+_config = Config.getInstance()
 _ds_positions = {v: k for k, v in
                  _config.get_value('sensors', 'ds1820', 'positions').items()}
 _wm = WLanManager(_config)
