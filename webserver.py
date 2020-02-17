@@ -9,7 +9,7 @@ from microDNSSrv import MicroDNSSrv
 import sensors
 from config import Config
 
-_config = Config()
+_config = Config.getInstance()
 
 # To not run into trouble with CORS while developing
 _headers = {'Access-Control-Allow-Origin': '*'}
@@ -32,9 +32,11 @@ def measure_ds1820(httpClient, httpResponse, routeArgs):
         # Read sensor DS1820
         if sensor == 'ds1820':
             ds = sensors.ds1820
-            ds.convert_temp()
-            time.sleep_ms(750)
-            data = ds.read_all()
+            roms = ds.scan()
+            if roms:
+                ds.convert_temp()
+                time.sleep_ms(750)
+                data = ds.read_all()
 
 
         # Read sensor HX711
@@ -123,6 +125,7 @@ def get_logfile(httpClient, httpResponse):
         obj=data,
         headers=_headers)
 
+print("in webserver.py")
 mws = MicroWebSrv()
 mws.SetNotFoundPageUrl("http://hiverize.wifi")
 MicroDNSSrv.Create({ '*' : '192.168.4.1' })
