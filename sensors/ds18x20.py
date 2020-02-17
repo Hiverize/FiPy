@@ -13,10 +13,12 @@ class DS18X20:
         print("init ds")
         self.ow = onewire
         self.buf = bytearray(9)
+        self.roms = self.scan()
 
 
     def scan(self):
-        return [rom for rom in self.ow.scan() if rom[0] == 0x10 or rom[0] == 0x28]
+        self.roms = [rom for rom in self.ow.scan() if rom[0] == 0x10 or rom[0] == 0x28]
+        return self.roms
 
     def convert_temp(self):
         self.ow.reset(True)
@@ -74,23 +76,27 @@ class DS18X20:
             return None
 
     def read_all(self, ds_positions=None):
-        roms = self.scan()
+        roms = self.roms
         data = {}
         for rom in roms:
             # print(rom)
             name = binascii.hexlify(rom).decode('utf-8')
             # print( name, end=' ')
-            tmp = self.read_temp(rom)
-            if tmp is not None:
-                ds18b20tmp = int(tmp*10)/10
-            else:
-                ds18b20tmp =  999999
-            print(ds18b20tmp, end=' ')
+            try:
+                tmp = self.read_temp(rom)
+                if tmp is not None:
+                    ds18b20tmp = int(tmp*10)/10
+                else:
+                    ds18b20tmp =  999999
+                print(ds18b20tmp, end=' ')
 
-            if ds_positions:
-                if name in ds_positions:
-                    data[ds_positions[name]] = ds18b20tmp
-            else:
-                data[name] = ds18b20tmp
+                if ds_positions:
+                    if name in ds_positions:
+                        data[ds_positions[name]] = ds18b20tmp
+                else:
+                    data[name] = ds18b20tmp
+
+            except:
+                log("Did not find rom.")
 
         return data
