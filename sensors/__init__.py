@@ -19,9 +19,13 @@ if _config.get_value('sensors', 'ds1820', 'enabled'):
     owPin  = _config.get_value('sensors', 'ds1820', 'pin')
     ow     = OneWire(Pin(owPin))
     ds1820 = DS18X20(ow)
-    roms   = ds1820.scan()
-    ds1820.convert_temp()
-    time.sleep_ms(750)
+    roms   = ds1820.roms
+    if not roms:
+        print("No DS1820 found. Is it connected properly?")
+    else:
+        print("Found {} DS1820.".format(len(roms)))
+        ds1820.convert_temp()
+        time.sleep_ms(750)
     # """ Testausdruck """
     # print('   DS18B20: ', end=' ')
     # for rom in roms:

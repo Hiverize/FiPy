@@ -94,9 +94,13 @@ def start_measurement():
 
         # Start DS1820 conversion
         if ds1820 is not None:
-                    ds1820.convert_temp()
-                    time.sleep_ms(750)
-                    print('   DS18B20: Messung gestartet...')
+            roms = ds1820.scan()
+            if roms:
+                ds1820.convert_temp()
+                time.sleep_ms(750)
+                print('   DS18B20: Messung gestartet...')
+            else:
+                print("No DS1820 found. Is it connected properly?")
         ms_conversion_start = perf.read_ms()
 
         # Read data from BME280
@@ -263,7 +267,7 @@ try:
                 rtc.ntp_sync("pool.ntp.org")
             except:
                 pass
-            if (reset_causes[machine.reset_cause()]=='PWRON' 
+            if (reset_causes[machine.reset_cause()]=='PWRON'
                         and not _config.get_value('general', 'general', 'button_ap_enabled')):
                     enable_ap()
                     wdt.init(timeout=10*60*1000)
