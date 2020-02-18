@@ -3,10 +3,26 @@ import os
 import machine
 
 class Config:
+# For the singleton factory.
+    __instance__ = None
+
     def __init__(self):
+        # Fulfill singleton factory.
+        Config.__instance__ = self
+
         self.path_user_settings = '/flash/user_settings.json'
         self.path_default_settings = '/flash/default_settings.json'
         self.read_settings()
+
+    @staticmethod
+    def getInstance():
+        """Singleton factory.
+        :param settings:  (Default value = None)
+        """
+        if Config.__instance__ is None:
+            Config()
+
+        return Config.__instance__
 
     def _read_json_file(self, path):
         content = {}
