@@ -176,6 +176,12 @@ def start_measurement():
                 and _wlan.isconnected()
                 and _beep is not None):
             _beep.add(data)
+        else:    
+            log('wlan not connected try to reconnect')
+            wdt.init(timeout=1*60*1000)
+            _wm.enable_client()
+            wdt.init(timeout=3*measurement_interval*1000)     
+            
         log(data)
         ms_log_data = perf.read_ms() - ms_ds_read
 
