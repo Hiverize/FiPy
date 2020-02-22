@@ -97,6 +97,7 @@ def start_measurement():
             wlan = network.WLAN(mode=network.WLAN.STA)
             data['rssi']= wlan.joined_ap_info().rssi
         except:
+            data['rssi']= 0
             pass
         
         # Start DS1820 conversion
