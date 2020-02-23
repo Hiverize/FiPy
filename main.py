@@ -208,15 +208,16 @@ def start_measurement():
 
 
 def ap_already_enabled():
-    log("ap already enabled.")
+    log("Already trying to enable AP.")
 
 # enable ap
 def enable_ap(pin=None):
     global _wm, loop_run, _wlan, wdt, button_ap
+    # if in button mode, make sure we don't enter this function again
     if _config.get_value('general', 'general', 'button_ap_enabled'):
         button_ap.callback(handler=ap_already_enabled)
         print("Called. Pin {}.".format(pin))
-    wdt.init(timeout=30*60*1000)
+    wdt.init(timeout=10*60*1000)
     if not _wlan.mode() == network.WLAN.AP:
         loop_run = False
         getattr(_wm, 'enable_ap')()
