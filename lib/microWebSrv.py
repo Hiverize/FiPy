@@ -23,11 +23,12 @@ except :
 
 class MicroWebSrvRoute :
     def __init__(self, route, method, func, routeArgNames, routeRegex) :
-        self.route         = route        
-        self.method        = method       
-        self.func          = func         
+        self.route         = route
+        self.method        = method
+        self.func          = func
         self.routeArgNames = routeArgNames
-        self.routeRegex    = routeRegex   
+        self.routeRegex    = routeRegex
+
 
 
 class MicroWebSrv :
@@ -206,6 +207,7 @@ class MicroWebSrv :
                     break
                 continue
             self._client(self, client, cliAddr)
+            gc.collect()
         self._started = False
 
     # ============================================================================
@@ -214,6 +216,7 @@ class MicroWebSrv :
 
     def Start(self, threaded=False) :
         if not self._started :
+            print("not yet started")
             self._server = socket.socket( socket.AF_INET,
                                           socket.SOCK_STREAM,
                                           socket.IPPROTO_TCP )
@@ -223,8 +226,10 @@ class MicroWebSrv :
             self._server.bind(self._srvAddr)
             self._server.listen(1)
             if threaded :
+                print("threaded")
                 MicroWebSrv._startThread(self._serverProcess)
             else :
+                print("not threaded")
                 self._serverProcess()
 
     # ----------------------------------------------------------------------------
@@ -253,7 +258,7 @@ class MicroWebSrv :
         return None
 
     # ----------------------------------------------------------------------------
-    
+
     def GetRouteHandler(self, resUrl, method) :
         if self._routeHandlers :
             #resUrl = resUrl.upper()
@@ -301,6 +306,7 @@ class MicroWebSrv :
         # ------------------------------------------------------------------------
 
         def __init__(self, microWebSrv, socket, addr) :
+            print("init client")
             socket.settimeout(2)
             self._microWebSrv   = microWebSrv
             self._socket        = socket
@@ -314,17 +320,18 @@ class MicroWebSrv :
             self._headers       = { }
             self._contentType   = None
             self._contentLength = 0
-            
+
             if hasattr(socket, 'readline'):   # MicroPython
                 self._socketfile = self._socket
             else:   # CPython
                 self._socketfile = self._socket.makefile('rwb')
-                        
+
             self._processRequest()
 
         # ------------------------------------------------------------------------
 
         def _processRequest(self) :
+            print("processing request")
             try :
                 response = MicroWebSrv._response(self)
                 if self._parseFirstLine(response) :
@@ -407,7 +414,7 @@ class MicroWebSrv :
             except :
                 pass
             return False
-    
+
         # ------------------------------------------------------------------------
 
         def _parseHeader(self, response) :
@@ -526,7 +533,7 @@ class MicroWebSrv :
                 return loads(self.ReadRequestContent())
             except :
                 return None
-        
+
     # ============================================================================
     # ===( Class Response  )======================================================
     # ============================================================================
