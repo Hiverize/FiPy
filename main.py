@@ -92,6 +92,14 @@ def start_measurement():
         # Measure all enabled sensors
         data = {}
 
+        #read RSSI 
+        try:
+            wlan = network.WLAN(mode=network.WLAN.STA)
+            data['rssi']= wlan.joined_ap_info().rssi
+        except:
+            data['rssi']= 0
+            pass
+        
         # Start DS1820 conversion
         if ds1820 is not None:
             roms = ds1820.scan()
