@@ -92,14 +92,14 @@ def start_measurement():
         # Measure all enabled sensors
         data = {}
 
-        #read RSSI 
+        #read RSSI
         try:
             wlan = network.WLAN(mode=network.WLAN.STA)
             data['rssi']= wlan.joined_ap_info().rssi
         except:
             data['rssi']= 0
             pass
-        
+
         # Start DS1820 conversion
         if ds1820 is not None:
             roms = ds1820.scan()
@@ -287,6 +287,7 @@ try:
             log("No network connection.")
             if ((_config.get_value('networking', 'accesspoint', 'enabled')
                     or _csv is None)
+                     and not _config.get_value('general', 'general', 'button_ap_enabled'))
                     and reset_causes[machine.reset_cause()]=='PWRON'):
                 enable_ap()
                 wdt.init(timeout=5*60*1000)
