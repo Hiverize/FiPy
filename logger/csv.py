@@ -23,11 +23,13 @@ class CSV_logger:
         return os.listdir(self.dir)
 
     def read_file(self, file):
-        f = open(self.dir + file)
-        for line in f:
-            line=line.rstrip('\n')
-            line=line.rstrip('\r')
-            CAN_Parm.append(line.split(','))
+        path = "{}/{}".format(self.dir,file)
+        print(path)
+        f = open(path)
+        content = f.read()
+        f.close()
+        return content
+
 
 
     def get_time_string(self):
@@ -103,7 +105,7 @@ class CSV_logger:
         print("in lineprotocol")
         # Get Time
         time_string, full_time_string = self.get_time_string()
-        write_time = int(round(time.time() * 1000*1000))
+        write_time = int(round(time.time() * 1000*1000*1000))
         print(write_time)
         # name and key
         name_key = "sensors,key={}".format(sensor_key)
