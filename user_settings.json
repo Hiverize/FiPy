@@ -1,10 +1,25 @@
-{"networking": {
-    "accesspoint": {
-        "enabled": true,
-        "ssid": "Moltebeere",
-        "encryption": 3,
-        "password": "hiverize",
-        "channel": 4
+{
+    "networking": {
+
+        "accesspoint": {
+            "enabled": true,
+            "ssid": "Heckenzwiebel",
+            "encryption": 3,
+            "password": "hiverize",
+            "channel": 4
+        },
+
+    },
+
+    "general": {
+        "general": {
+            "button_ap_enabled": true,
+            "button_ap_pin": "P16",
+            "button_send_enabled": true,
+            "button_send_pin": "P14",
+            "initial_time": 1556805688,
+            "measurement_interval": 5,
+            "oled": false
+        }
     }
-}
 }
