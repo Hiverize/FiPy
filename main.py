@@ -185,7 +185,8 @@ def start_measurement():
                 and _wlan.isconnected()
                 and _beep is not None):
             try:
-                _beep.add(data)
+                #_beep.add(data)
+                print("not sending to beep")
             except Exception as e:
                 log("Sending data failed")
                 log(e)
@@ -254,13 +255,21 @@ def enable_ap(pin=None):
         webserver.mws.Start(threaded=True)
 
 def send_sd(pin=None):
-    button_send.callback(handler=send_already_enabled)
-    global wdt, _csv
+    #button_send.callback(handler=send_already_enabled)
+    global wdt, _csv, _influx
     log("Trying to send data stored on sd.")
     print("Called. Pin {}.".format(pin))
     wdt.init(timeout=10*60*1000)
     loop_run = False
-    #for file in _csv.list_files():
+    for file in _csv.list_files():
+        print(file)
+        content = _csv.read_file(file)
+        #print(content)
+        _influx.send(content)
+    time.sleep_ms(1000)
+    machine.reset()
+
+    #button_send.callback(handler=send_sd)
 
 
 
@@ -280,7 +289,7 @@ except:
     rtc.init(time.gmtime(1556805688))
 
 log("AP SSID: {}".format(_config.get_value('networking', 'accesspoint', 'ssid')))
-log("Cause of restart: {}".format(reset_causes[machine.reset_cause()]))
+log("Cause of : {}".format(reset_causes[machine.reset_cause()]))
 
 log("switching to ap mode is now possible")
 pycom.rgbled(0x007f00)
@@ -306,6 +315,7 @@ try:
         log("WLan is enabled, trying to connect.")
         _wm.enable_client()
         _beep = logger.beep
+        _influx = logger.influx
 
         # add to time server
         if _wlan.mode() == network.WLAN.STA and _wlan.isconnected():
