@@ -21,17 +21,22 @@ from lib.onewire     import OneWire
 from sensors.ds18x20 import DS18X20
 
 
+print('Start -> logger')
+_csv  = logger.csv
 
 # Log method
 def log(message):
-    print(message)
+    if _csv is not None:
+        _csv.log(message)
+    else:
+        print(message)
 
 # Change color of LED only if P2 not in Use for AP
 def rgb_led(rgb):
-    if not(_config.get_value('general', 'general', 'button_ap_enabled') 
+    if not(_config.get_value('general', 'general', 'button_ap_enabled')
        and _config.get_value('general', 'general', 'button_ap_pin')==2):
-        pycom.rgbled(rgb)   
-    
+        pycom.rgbled(rgb)
+
 # needed for boards without buttons
 reset_causes = {
     machine.PWRON_RESET: 'PWRON', # Press reset button on FiPy
@@ -49,6 +54,7 @@ _ds_positions = {v: k for k, v in
 _wm = WLanManager(_config)
 _wlan = network.WLAN(id=0)
 
+
 measurement_interval = _config.get_value('general', 'general', 'measurement_interval')
 
 #set up watchdog, on start timeout only after 1min
@@ -56,12 +62,13 @@ wdt = machine.WDT(timeout=60*1000)
 
 loop_run = True
 cycle = 0
+crcerrcnt = 0
 
 oled = _config.get_value('general', 'general', 'oled')
 if oled:
     i2c = I2C(0, I2C.MASTER, pins=('P9', 'P10'))       # PyCom FiPy
     _oled = sensors.ssd1306.SSD1306_I2C(128, 64, i2c)           # x, y, bus
-    _oled.fill(1)
+    _oled.fill(0)
     _oled.show()
 
 # DS18B20 new
@@ -73,13 +80,15 @@ if _config.get_value('sensors', 'ds1820', 'enabled'):
 else:
     ds1820 = None
 
+
+print('Start -> Info:', end = ' ')
 log(uos.uname())
 
 
 
 # start main measurement cycle
 def start_measurement():
-    global cycle, loop_run
+    global cycle, loop_run, crcerrcnt
 
     perf = machine.Timer.Chrono()
     #pycom.heartbeat(False)
@@ -92,6 +101,9 @@ def start_measurement():
     #micropython.mem_info(True)
 
     while loop_run:
+        cycle = cycle + 1
+        text = str(cycle) + ". Messung"
+        log(text)
         # start time measuring
         perf.start()
         rgb_led(0x003000)
@@ -120,17 +132,24 @@ def start_measurement():
         # Read data from BME280
         if bme280 is not None:
             try:
-                (data['t'],
-                data['p'],
-                data['h']) = bme280.read_compensated_data()
-                data['p'] = data['p']/100 # Pa to mBar
+                bme280val = bme280.read_compensated_data()      # auslesen BME280
+                bme280tmp = int(bme280val[0]*10)/10             # 1 Stelle nach Komma
+                bme280pre = int(bme280val[1]/10)/10
+                bme280hum = int(bme280val[2]*10)/10
+                print('   BME280: ', bme280tmp, 'C', bme280pre, 'mbar', bme280hum, '%')
+                data['t'] = str(bme280tmp)
+                data['p'] = str(bme280pre)
+                data['h'] = str(bme280hum)
             except:
                 log("BME280 not measuring.")
         ms_bme_read = perf.read_ms() - ms_conversion_start
 
         # Read data from HX711
         if hx711 is not None:
-            data['weight_kg'] = hx711.get_value(times=1)
+            hx711akt = hx711.get_value(times=1)
+            hx711akt = str(int(hx711akt*1000)/1000)         # 3 Dezimalstellen nach Komma
+            print('   HX711:  ', hx711akt, 'kg' )
+            data['weight_kg'] = hx711akt
         ms_hx_read = perf.read_ms() - ms_bme_read
 
         # Read data from DS1820
@@ -153,44 +172,61 @@ def start_measurement():
             data.update(ds_data)
             print(' ')
         ms_ds_read = perf.read_ms() - ms_hx_read
+        #Ermitteln und Ausgabe der Zeit
+        write_time = time.time()
+        write_time = write_time + 3600                          # UTC + 1 Stunde
+        datetime_list = time.localtime(write_time)
+        datetime_string = "{:4d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(*datetime_list[0:6])
+        time_string = "{:02d}:{:02d}:{:02d}".format(*datetime_list[3:6])
+        print('   Zeiten: ', end=' ')
+        print(time_string, end=' ')
 
         if oled:
-            _oled.fill(0)                                         # alles aus
-            #oled.text("BOB     hh:mm:ss",   0,  0)               # Textausgabe
-            #oled.text(str(counter),        30,  0)
-            _oled.text("Waage           " ,  0,  9)
-            if 'weight_kg' in data:
-                _oled.text(str(round(data['weight_kg'],1)),       64,  9)
-            _oled.text("kg",               100,  9)
-            _oled.text("BME280          " ,  0, 18)
-            if 't' in data:
-                _oled.text(str(round(data['t'],1))     ,  0, 27)
-            if 'p' in data:
-                _oled.text(str(round(data['p'],1))     , 40, 27)
-            if 'h' in data:
-                _oled.text(str(round(data['h'],1))     , 95, 27)
-            _oled.text("DS18B20         " ,  0, 36)
-            if 't_i_1' in data:
-                _oled.text(str(round(data['t_i_1'],1)),  0, 45)
-            if 't_i_2' in data:
-                _oled.text(str(round(data['t_i_2'],1)), 50, 45)
-            if 't_i_3' in data:
-                _oled.text(str(round(data['t_i_3'],1)), 95, 45)
-            if 't_i_4' in data:
-                _oled.text(str(round(data['t_i_4'],1)),  0, 54)
-            if 't_i_5' in data:
-                _oled.text(str(round(data['t_i_5'],1)), 50, 54)
-            if 't_o' in data:
-                _oled.text(str(round(data['t_o'],1)), 95, 54)
-            _oled.show()                                         # anzeigen
+            try:
+                _oled.fill(0)                                         # alles aus
+                _oled.text(str(cycle),              0,  0)
+                _oled.text(time_string,            64,  0)
+                _oled.text("Waage           "   ,   0,  9)
+                if 'weight_kg' in data:
+                    _oled.text(data['weight_kg'],  64,  9)
+                    _oled.text("kg",              110,  9)
+                _oled.text("BME280          "   ,   0, 18)
+                if 't' in data:
+                    _oled.text(data['t']        ,   0, 27)
+                if 'p' in data:
+                    _oled.text(data['p']        ,  40, 27)
+                if 'h' in data:
+                    _oled.text(data['h']        ,  95, 27)
+                _oled.text("DS18B20         "   ,   0, 36)
+                if 't_i_1' in data:
+#                   _oled.text(str(round(data['t_i_1'],1)),   0, 45)
+                    _oled.text(data['t_i_1']    ,   0, 45)
+                if 't_i_2' in data:
+                    _oled.text(data['t_i_2']    ,  50, 45)
+                if 't_i_3' in data:
+                    _oled.text(data['t_i_3']    ,  95, 45)
+                if 't_i_4' in data:
+                    _oled.text(data['t_i_4']    ,   0, 54)
+                if 't_i_5' in data:
+                    _oled.text(data['t_i_5']    ,  50, 54)
+                if 't_o' in data:
+                    _oled.text(data['t_o']      ,  95, 54)
+                _oled.show()                                         # anzeigen
+            except:
+                print('OLED Fehler',end=' ')
 
-
+        print('   WLAN:   ', end = ' ')
         # Log measured values, if possible
         if (_wlan.mode() == network.WLAN.STA
                 and _wlan.isconnected()
                 and _beep is not None):
             _beep.add(data)
         log(data)
+        """ Daten auf SD-Karte """
+        # print('   Daten an SD-Karte')
+        if _csv is not None:
+            # _csv.add_dict(data)
+            _csv.add_data_didi(data)
         ms_log_data = perf.read_ms() - ms_ds_read
 
         # Collect garbage
@@ -202,18 +238,18 @@ def start_measurement():
         time_elapsed = perf.read_ms()
         time_until_measurement = measurement_interval * 1000 - time_elapsed
         perf.reset()
-        cycle += 1
-        log("#{:d}, Seconds elapsed: {:.3f}s,"
-            "time until next measurement: {:.3f}s".format(cycle,
-                                                          time_elapsed/1000,
-                                                          time_until_measurement/1000))
-        log("DS1820: {:.0f}ms + {:.0f}ms, BME280: {:.0f}ms, HX711: {:.0f}ms "
-            "Log: {:.0f}ms, GC: {:.0f}ms".format(ms_conversion_start,
-                                             ms_ds_read,
-                                             ms_bme_read,
-                                             ms_hx_read,
-                                             ms_log_data,
-                                             ms_gc))
+        # cycle += 1
+        # log("#{:d}, Seconds elapsed: {:.3f}s,"
+        #     "time until next measurement: {:.3f}s".format(cycle,
+        #                                                   time_elapsed/1000,
+        #                                                   time_until_measurement/1000))
+        # log("DS1820: {:.0f}ms + {:.0f}ms, BME280: {:.0f}ms, HX711: {:.0f}ms "
+        #     "Log: {:.0f}ms, GC: {:.0f}ms".format(ms_conversion_start,
+        #                                      ms_ds_read,
+        #                                      ms_bme_read,
+        #                                      ms_hx_read,
+        #                                      ms_log_data,
+        #                                      ms_gc))
 
         wdt.feed()
 
@@ -245,7 +281,7 @@ def enable_ap(pin=None):
 
 # Initial SSID scan
 no_ssids = _wm.scan()
-log("{:d} SSIDS found".format(no_ssids))
+log("Start -> {:d} SSIDS found".format(no_ssids))
 
 # init time
 try:
@@ -255,10 +291,10 @@ except:
     log("Time init failed")
     rtc.init(time.gmtime(1556805688))
 
-log("AP SSID: {}".format(_config.get_value('networking', 'accesspoint', 'ssid')))
-log("Cause of restart: {}".format(reset_causes[machine.reset_cause()]))
+log("Start -> AP SSID: {}".format(_config.get_value('networking', 'accesspoint', 'ssid')))
+log("Start -> Cause of restart: {}".format(reset_causes[machine.reset_cause()]))
 
-log("switching to ap mode is now possible")
+log("Start -> switching to ap mode is now possible")
 rgb_led(0x002000)
 if _config.get_value('general', 'general', 'button_ap_enabled'):
     button_ap = machine.Pin(_config.get_value('general', 'general', 'button_ap_pin'),
@@ -268,7 +304,7 @@ if _config.get_value('general', 'general', 'button_ap_enabled'):
                        handler=enable_ap)
 
 
-log("Starting measurement setup...")
+log("Start -> Starting measurement setup...")
 wdt.feed()
 try:
     if _config.get_value('networking', 'wlan', 'enabled'):
@@ -305,6 +341,7 @@ try:
         start_measurement()
 
 except:
+    log("Exception am Ende des Programms")
     log("Error, dumping memory")
     log(sys.exc_info())
     micropython.mem_info(True)
