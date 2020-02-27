@@ -26,6 +26,12 @@ from sensors.ds18x20 import DS18X20
 def log(message):
     print(message)
 
+# Change color of LED only if P2 not in Use for AP
+def rgb_led(rgb):
+    if not(_config.get_value('general', 'general', 'button_ap_enabled') 
+       and _config.get_value('general', 'general', 'button_ap_pin')==2):
+        pycom.rgbled(rgb)   
+    
 # needed for boards without buttons
 reset_causes = {
     machine.PWRON_RESET: 'PWRON', # Press reset button on FiPy
@@ -88,7 +94,7 @@ def start_measurement():
     while loop_run:
         # start time measuring
         perf.start()
-
+        rgb_led(0x003000)
         # Measure all enabled sensors
         data = {}
 
@@ -212,6 +218,7 @@ def start_measurement():
         wdt.feed()
 
         if time_until_measurement > 0:
+            rgb_led(0x080800)
             time.sleep_ms(int(time_until_measurement))
 
 
@@ -229,9 +236,8 @@ def enable_ap(pin=None):
     if not _wlan.mode() == network.WLAN.AP:
         loop_run = False
         getattr(_wm, 'enable_ap')()
-        log("enabled ap")
-        #pycom.heartbeat(False)
-        #pycom.rgbled(0x007f00)
+        log("AP enabled")
+        rgb_led(0x000020)
     if not webserver.mws.IsStarted():
         webserver.mws.Start(threaded=True)
 
@@ -253,7 +259,7 @@ log("AP SSID: {}".format(_config.get_value('networking', 'accesspoint', 'ssid'))
 log("Cause of restart: {}".format(reset_causes[machine.reset_cause()]))
 
 log("switching to ap mode is now possible")
-pycom.rgbled(0x007f00)
+rgb_led(0x002000)
 if _config.get_value('general', 'general', 'button_ap_enabled'):
     button_ap = machine.Pin(_config.get_value('general', 'general', 'button_ap_pin'),
                             mode=machine.Pin.IN,
