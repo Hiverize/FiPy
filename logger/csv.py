@@ -19,6 +19,17 @@ class CSV_logger:
             os.mkdir(dir)
         print("Initialised CSV logger in directory " +dir)
 
+    def list_files(self):
+        return os.listdir(self.dir)
+
+    def read_file(self, file):
+        f = open(self.dir + file)
+        for line in f:
+            line=line.rstrip('\n')
+            line=line.rstrip('\r')
+            CAN_Parm.append(line.split(','))
+
+
     def get_time_string(self):
         # Get Time
         write_time = time.time()
@@ -87,3 +98,38 @@ class CSV_logger:
         with open(file_path, 'a') as f:
             f.write("".join(data_list))
         print("Wrote {} lines to csv at {}".format(len(data_list), full_time_string))
+
+    def add_dict_lineprotocol(self, data, sensor_key):
+        print("in lineprotocol")
+        # Get Time
+        time_string, full_time_string = self.get_time_string()
+        write_time = int(round(time.time() * 1000*1000))
+        print(write_time)
+        # name and key
+        name_key = "sensors,key={}".format(sensor_key)
+        print(name_key)
+        # combine dict entries
+        data_list = ["{}={},".format(key, value) for key, value in data.items()]
+        print(data_list)
+        data_list = "".join(data_list)
+        print(data_list)
+        # delete last comma
+        data_list = data_list[:-1]
+
+        # combine
+        full_string = "{} {} {}\n".format(name_key, data_list, write_time)
+
+        # concat filepath
+        file_path = self.dir + "/" +time_string + ".txt"
+        # Write header, if file did not exist before
+        try:
+            f = open(file_path, 'r')
+            f.close()
+        except OSError:
+            f = open(file_path, 'w')
+            f.close()
+            print("Logging measurements to " +file_path)
+        # Append Value
+        with open(file_path, 'a') as f:
+            f.write(full_string)
+        print("Wrote 1 line to csv at {}".format(full_time_string))

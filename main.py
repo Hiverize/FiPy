@@ -42,6 +42,7 @@ _ds_positions = {v: k for k, v in
                  _config.get_value('sensors', 'ds1820', 'positions').items()}
 _wm = WLanManager(_config)
 _wlan = network.WLAN(id=0)
+_csv = logger.csv
 
 measurement_interval = _config.get_value('general', 'general', 'measurement_interval')
 
@@ -183,7 +184,21 @@ def start_measurement():
         if (_wlan.mode() == network.WLAN.STA
                 and _wlan.isconnected()
                 and _beep is not None):
-            _beep.add(data)
+            try:
+                _beep.add(data)
+            except Exception as e:
+                log("Sending data failed")
+                log(e)
+                #_csv.add_dict(data)
+        log("log in lineprotocol")
+        _csv.add_dict_lineprotocol(data, _config.get_value('telemetry', 'beep', 'sensor_key'))
+
+         # wlan reconnect here?
+            # log('wlan not connected try to reconnect')
+            # wdt.init(timeout=1*60*1000)
+            # _wm.enable_client()
+            # wdt.init(timeout=3*measurement_interval*1000)
+
         log(data)
         ms_log_data = perf.read_ms() - ms_ds_read
 
@@ -218,6 +233,9 @@ def start_measurement():
 def ap_already_enabled():
     log("Already trying to enable AP.")
 
+def send_already_enabled():
+    log("Already trying to send data.")
+
 # enable ap
 def enable_ap(pin=None):
     global _wm, loop_run, _wlan, wdt, button_ap
@@ -235,7 +253,19 @@ def enable_ap(pin=None):
     if not webserver.mws.IsStarted():
         webserver.mws.Start(threaded=True)
 
-###### run this #######
+def send_sd(pin=None):
+    button_send.callback(handler=send_already_enabled)
+    global wdt, _csv
+    log("Trying to send data stored on sd.")
+    print("Called. Pin {}.".format(pin))
+    wdt.init(timeout=10*60*1000)
+    loop_run = False
+    #for file in _csv.list_files():
+
+
+
+
+###### run this ####### 13, 16
 
 # Initial SSID scan
 no_ssids = _wm.scan()
@@ -260,6 +290,13 @@ if _config.get_value('general', 'general', 'button_ap_enabled'):
                             pull=machine.Pin.PULL_UP)
     button_ap.callback(machine.Pin.IRQ_RISING,
                        handler=enable_ap)
+if _config.get_value('general', 'general', 'button_send_enabled'):
+    log("enabling send button")
+    button_send = machine.Pin(_config.get_value('general', 'general', 'button_send_pin'),
+                        mode=machine.Pin.IN,
+                        pull=machine.Pin.PULL_UP)
+    button_send.callback(machine.Pin.IRQ_RISING,
+                   handler=send_sd)
 
 
 log("Starting measurement setup...")
