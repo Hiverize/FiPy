@@ -60,6 +60,17 @@ def measure_ds1820(httpClient, httpResponse, routeArgs):
     else:
         return httpResponse.WriteResponseJSONError(404)
 
+@MicroWebSrv.route('/reinit')
+def reinit(httpClient, httpResponse):
+    print("reinit")
+    hx = sensors.hx711
+    print("cal factor and offset")
+    print(_config.get_value('sensors', 'hx711', 'calibration_factor'))
+    print(_config.get_value('sensors', 'hx711', 'tare_offset'))
+    hx.set_scale(_config.get_value('sensors', 'hx711', 'calibration_factor'))
+    hx.set_offset(_config.get_value('sensors', 'hx711', 'tare_offset'))
+
+
 
 ##############################################################################
 # Routes for working with the config                                         #
