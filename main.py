@@ -97,6 +97,8 @@ def start_measurement():
     # reconfigure watchdog timeout
     wdt.init(timeout=3*measurement_interval*1000)
 
+    until_wifi_reconnect = 6
+
     #log("Memory dump on startup:")
     #micropython.mem_info(True)
 
@@ -217,7 +219,8 @@ def start_measurement():
 
         print('   WLAN:   ', end = ' ')
         # Log measured values, if possible
-        if (_wlan.mode() == network.WLAN.STA
+        if ( _config.get_value('networking', 'wlan', 'enabled')
+                and _wlan.mode() == network.WLAN.STA
                 and _wlan.isconnected()
                 and _beep is not None):
             _beep.add(data)
@@ -228,6 +231,26 @@ def start_measurement():
             # _csv.add_dict(data)
             _csv.add_data_didi(data)
         ms_log_data = perf.read_ms() - ms_ds_read
+
+        # Trying to reconnect to wifi if possible:
+
+        if ( _config.get_value('networking', 'wlan', 'enabled')
+                and _beep is not None
+                and ((not _wlan.mode() == network.WLAN.STA) or
+                (not _wlan.isconnected()))
+                ):
+            log("wlan is enabled but not connected.")
+            until_wifi_reconnect -= 1
+            log("trying to reconnect in {} intervals".format(until_wifi_reconnect))
+            if until_wifi_reconnect <= 0:
+                log('wlan not connected try to reconnect')
+                wdt.init(timeout=1*60*1000)
+                _wm.enable_client()
+                until_wifi_reconnect = 6
+                wdt.init(timeout=3*measurement_interval*1000)
+        else:
+            until_wifi_reconnect = 6
+
 
         # Collect garbage
         gc.collect()
