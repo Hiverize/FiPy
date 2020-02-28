@@ -97,7 +97,7 @@ def start_measurement():
     # reconfigure watchdog timeout
     wdt.init(timeout=3*measurement_interval*1000)
 
-    until_wifi_reconnect = 6
+    until_wifi_reconnect = _config.get_value('general', 'general', 'until_wifi_reconnect')
 
     #log("Memory dump on startup:")
     #micropython.mem_info(True)
@@ -246,10 +246,10 @@ def start_measurement():
                 log('wlan not connected try to reconnect')
                 wdt.init(timeout=1*60*1000)
                 _wm.enable_client()
-                until_wifi_reconnect = 6
+                until_wifi_reconnect = _config.get_value('general', 'general', 'until_wifi_reconnect')
                 wdt.init(timeout=3*measurement_interval*1000)
         else:
-            until_wifi_reconnect = 6
+            until_wifi_reconnect = _config.get_value('general', 'general', 'until_wifi_reconnect')
 
 
         # Collect garbage
