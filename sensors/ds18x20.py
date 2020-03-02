@@ -75,7 +75,7 @@ class DS18X20:
             except:
                 print("CRC-Err", end = ' ')
                 # ds18b20tmp =  '99.9'
-                ds18b20tmp =  '    '
+                continue
             print(ds18b20tmp, end=' ')
             if ds_positions:
                 if name in ds_positions:
