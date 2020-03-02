@@ -115,7 +115,7 @@ def start_measurement():
         #read RSSI
         try:
             wlan = network.WLAN(mode=network.WLAN.STA)
-            data['rssi']= wlan.joined_ap_info().rssi
+            data['rssi']= _wlan.joined_ap_info().rssi
         except:
             data['rssi']= 0
             pass
@@ -139,9 +139,9 @@ def start_measurement():
                 bme280pre = int(bme280val[1]/10)/10
                 bme280hum = int(bme280val[2]*10)/10
                 print('   BME280: ', bme280tmp, 'C', bme280pre, 'mbar', bme280hum, '%')
-                data['t'] = str(bme280tmp)
-                data['p'] = str(bme280pre)
-                data['h'] = str(bme280hum)
+                data['t'] = bme280tmp
+                data['p'] = bme280pre
+                data['h'] = bme280hum
             except:
                 log("BME280 not measuring.")
         ms_bme_read = perf.read_ms() - ms_conversion_start
@@ -149,7 +149,7 @@ def start_measurement():
         # Read data from HX711
         if hx711 is not None:
             hx711akt = hx711.get_value(times=1)
-            hx711akt = str(int(hx711akt*1000)/1000)         # 3 Dezimalstellen nach Komma
+            hx711akt = int(hx711akt*1000)/1000       # 3 Dezimalstellen nach Komma
             print('   HX711:  ', hx711akt, 'kg' )
             data['weight_kg'] = hx711akt
         ms_hx_read = perf.read_ms() - ms_bme_read
@@ -190,29 +190,29 @@ def start_measurement():
                 _oled.text(time_string,            64,  0)
                 _oled.text("Waage           "   ,   0,  9)
                 if 'weight_kg' in data:
-                    _oled.text(data['weight_kg'],  64,  9)
+                    _oled.text(str(data['weight_kg']),  64,  9)
                     _oled.text("kg",              110,  9)
                 _oled.text("BME280          "   ,   0, 18)
                 if 't' in data:
-                    _oled.text(data['t']        ,   0, 27)
+                    _oled.text(str(data['t'])        ,   0, 27)
                 if 'p' in data:
-                    _oled.text(data['p']        ,  40, 27)
+                    _oled.text(str(data['p'])        ,  40, 27)
                 if 'h' in data:
-                    _oled.text(data['h']        ,  95, 27)
+                    _oled.text(str(data['h'])        ,  95, 27)
                 _oled.text("DS18B20         "   ,   0, 36)
                 if 't_i_1' in data:
 #                   _oled.text(str(round(data['t_i_1'],1)),   0, 45)
-                    _oled.text(data['t_i_1']    ,   0, 45)
+                    _oled.text(str(data['t_i_1'])    ,   0, 45)
                 if 't_i_2' in data:
-                    _oled.text(data['t_i_2']    ,  50, 45)
+                    _oled.text(str(data['t_i_2'])    ,  50, 45)
                 if 't_i_3' in data:
-                    _oled.text(data['t_i_3']    ,  95, 45)
+                    _oled.text(str(data['t_i_3'])    ,  95, 45)
                 if 't_i_4' in data:
-                    _oled.text(data['t_i_4']    ,   0, 54)
+                    _oled.text(str(data['t_i_4'])    ,   0, 54)
                 if 't_i_5' in data:
-                    _oled.text(data['t_i_5']    ,  50, 54)
+                    _oled.text(str(data['t_i_5'])    ,  50, 54)
                 if 't_o' in data:
-                    _oled.text(data['t_o']      ,  95, 54)
+                    _oled.text(str(data['t_o'])      ,  95, 54)
                 _oled.show()                                         # anzeigen
             except:
                 print('OLED Fehler',end=' ')
