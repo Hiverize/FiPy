@@ -126,51 +126,51 @@ class CSV_logger:
 
         test_list = ' '
         if 'bv'   in data:
-            test_list = test_list +  data['bv'] + ', '
+            test_list = test_list +  str(data['bv']) + ', '
         else:
             test_list = test_list + '0000, '
         test_list = test_list + full_time_string + ',  '
         if 't' in data:
-            test_list = test_list +  data['t'] + ', '
+            test_list = test_list +  str(data['t']) + ', '
         else:
             test_list = test_list + '00.0, '
         if 'p' in data:
-            test_list = test_list +  data['p'] + ', '
+            test_list = test_list +  str(data['p']) + ', '
         else:
             test_list = test_list + '00.0, '
         if 'h' in data:
-            test_list = test_list +  data['h'] + ', '
+            test_list = test_list +  str(data['h']) + ', '
         else:
             test_list = test_list + '00.0, '
         if 'weight_kg' in data:
-            test_list = test_list +  data['weight_kg'] + ',  '
+            test_list = test_list +  str(data['weight_kg']) + ',  '
         else:
             test_list = test_list + '00.0,  '
 
         if 't_i_1' in data:
             # t1  = data['t_i_1']    # t1s = ("{:5.1f}".format(t1))
-            test_list = test_list +  data['t_i_1'] + ', '
+            test_list = test_list +  str(data['t_i_1']) + ', '
         else:
             test_list = test_list + '00.0, '
 #        print('add_data 3')
         if 't_i_2' in data:
-            test_list = test_list +  data['t_i_2'] + ', '
+            test_list = test_list +  str(data['t_i_2']) + ', '
         else:
             test_list = test_list + '00.0, '
         if 't_i_3' in data:
-            test_list = test_list +  data['t_i_3'] + ', '
+            test_list = test_list +  str(data['t_i_3']) + ', '
         else:
             test_list = test_list + '00.0, '
         if 't_i_4' in data:
-            test_list = test_list +  data['t_i_4'] + ', '
+            test_list = test_list +  str(data['t_i_4']) + ', '
         else:
             test_list = test_list + '00.0, '
         if 't_i_5' in data:
-            test_list = test_list +  data['t_i_5'] + ', '
+            test_list = test_list +  str(data['t_i_5']) + ', '
         else:
             test_list = test_list + '00.0, '
         if 't_o'   in data:
-            test_list = test_list +  data['t_o'] + ', '
+            test_list = test_list +  str(data['t_o']) + ', '
         else:
             test_list = test_list + '00.0, '
 
