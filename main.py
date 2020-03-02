@@ -115,7 +115,7 @@ def start_measurement():
         #read RSSI
         try:
             wlan = network.WLAN(mode=network.WLAN.STA)
-            data['rssi']= wlan.joined_ap_info().rssi
+            data['rssi']= _wlan.joined_ap_info().rssi
         except:
             data['rssi']= 0
             pass
