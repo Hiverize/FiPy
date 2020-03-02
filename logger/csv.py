@@ -133,46 +133,46 @@ class CSV_logger:
         if 't' in data:
             test_list = test_list +  str(data['t']) + ', '
         else:
-            test_list = test_list + '00.0, '
+            test_list = test_list + 'NA, '
         if 'p' in data:
             test_list = test_list +  str(data['p']) + ', '
         else:
-            test_list = test_list + '00.0, '
+            test_list = test_list + 'NA, '
         if 'h' in data:
             test_list = test_list +  str(data['h']) + ', '
         else:
-            test_list = test_list + '00.0, '
+            test_list = test_list + 'NA, '
         if 'weight_kg' in data:
             test_list = test_list +  str(data['weight_kg']) + ',  '
         else:
-            test_list = test_list + '00.0,  '
+            test_list = test_list + 'NA,  '
 
         if 't_i_1' in data:
             # t1  = data['t_i_1']    # t1s = ("{:5.1f}".format(t1))
             test_list = test_list +  str(data['t_i_1']) + ', '
         else:
-            test_list = test_list + '00.0, '
+            test_list = test_list + 'NA, '
 #        print('add_data 3')
         if 't_i_2' in data:
             test_list = test_list +  str(data['t_i_2']) + ', '
         else:
-            test_list = test_list + '00.0, '
+            test_list = test_list + 'NA, '
         if 't_i_3' in data:
             test_list = test_list +  str(data['t_i_3']) + ', '
         else:
-            test_list = test_list + '00.0, '
+            test_list = test_list + 'NA, '
         if 't_i_4' in data:
             test_list = test_list +  str(data['t_i_4']) + ', '
         else:
-            test_list = test_list + '00.0, '
+            test_list = test_list + 'NA, '
         if 't_i_5' in data:
             test_list = test_list +  str(data['t_i_5']) + ', '
         else:
-            test_list = test_list + '00.0, '
+            test_list = test_list + 'NA, '
         if 't_o'   in data:
             test_list = test_list +  str(data['t_o']) + ', '
         else:
-            test_list = test_list + '00.0, '
+            test_list = test_list + 'NA, '
 
         test_list = test_list     + ' \n'
         print('   SD-Card:', test_list, end = ' ')
@@ -183,8 +183,8 @@ class CSV_logger:
             f.close()
         except OSError:
             f = open(file_path, 'w')
-            f.write('# Cycle       Time               BME280               HX711    DS18B20 \n')
-            f.write('# Cycle Date         Time        t     p        h       kg     t1     t2     t3     t4     t5     to \n')
+            f.write('Cycle,,       Time,               BME280,,,               HX711,    DS18B20 \n')
+            f.write('Cycle, Date,         Time,        t,     p,        h,       kg,     t1,     t2,     t3,     t4,     t5,     to \n')
             f.close()
             print("   Logging measurements to " + file_path)
         # Append Value
