@@ -68,7 +68,8 @@
             "initial_time": 1556805688,
             "measurement_interval": 5,
             "until_wifi_reconnect" : 12,
-            "oled": false
+            "oled": false,
+            "plt": false
         }
     }
 }
