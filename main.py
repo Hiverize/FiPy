@@ -136,7 +136,7 @@ def start_measurement():
             try:
                 bme280val = bme280.read_compensated_data()      # auslesen BME280
                 bme280tmp = round(bme280val[0],2)            # 2 Stellen nach Komma
-                bme280pre = round(bme280val[1]/100,2)
+                bme280pre = int(round(bme280val[1]/100,0))
                 bme280hum = round(bme280val[2],2)
                 print('   BME280: ', bme280tmp, 'C', bme280pre, 'mbar', bme280hum, '%')
                 data['t'] = bme280tmp
@@ -229,7 +229,7 @@ def start_measurement():
         # print('   Daten an SD-Karte')
         if _csv is not None:
             # _csv.add_dict(data)
-            _csv.add_data_didi(data, _config.get_value('general', 'general', 'plt'))
+            _csv.add_data_didi(data, _config.get_value('general', 'general', 'plt'), cycle)
         ms_log_data = perf.read_ms() - ms_ds_read
 
         # Trying to reconnect to wifi if possible:

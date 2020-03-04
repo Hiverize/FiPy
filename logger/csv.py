@@ -111,7 +111,7 @@ class CSV_logger:
         print("Wrote {} lines to csv at {}".format(len(data_list), full_time_string))
 
     """ Datenfile yyyy-mm-dd.csv mit time, value1, ... value10               """
-    def add_data_didi(self, data, plt):
+    def add_data_didi(self, data, plt, cycle):
         date_string = self.get_date()
         time_string = self.get_time()
         hour_string = self.get_hour()
@@ -125,10 +125,8 @@ class CSV_logger:
         full_time_string = date_string + ',  ' + self.get_time()
 
         test_list = ' '
-        if 'bv'   in data:
-            test_list = test_list +  str(data['bv']) + ', '
-        else:
-            test_list = test_list + '0000, '
+        test_list = test_list +  str(cycle) + ', '
+
         test_list = test_list + full_time_string + ',  '
         if 't' in data:
             test_list = test_list +  str(data['t']) + ', '
