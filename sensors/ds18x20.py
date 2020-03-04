@@ -71,7 +71,7 @@ class DS18X20:
             name = binascii.hexlify(rom).decode('utf-8')
             try:
                 tmp = self.read_temp(rom)
-                ds18b20tmp = int(tmp*10)/10
+                ds18b20tmp = round(tmp, 2)
             except:
                 print("CRC-Err", end = ' ')
                 # ds18b20tmp =  '99.9'

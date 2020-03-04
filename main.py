@@ -114,7 +114,7 @@ def start_measurement():
 
         #read RSSI
         try:
-            wlan = network.WLAN(mode=network.WLAN.STA)
+            #wlan = network.WLAN(mode=network.WLAN.STA)
             data['rssi']= _wlan.joined_ap_info().rssi
         except:
             data['rssi']= 0
@@ -135,9 +135,9 @@ def start_measurement():
         if bme280 is not None:
             try:
                 bme280val = bme280.read_compensated_data()      # auslesen BME280
-                bme280tmp = int(bme280val[0]*10)/10             # 1 Stelle nach Komma
-                bme280pre = int(bme280val[1]/10)/10
-                bme280hum = int(bme280val[2]*10)/10
+                bme280tmp = round(bme280val[0],2)            # 2 Stellen nach Komma
+                bme280pre = round(bme280val[1],2)
+                bme280hum = round(bme280val[2],2)
                 print('   BME280: ', bme280tmp, 'C', bme280pre, 'mbar', bme280hum, '%')
                 data['t'] = bme280tmp
                 data['p'] = bme280pre
@@ -149,7 +149,7 @@ def start_measurement():
         # Read data from HX711
         if hx711 is not None:
             hx711akt = hx711.get_value(times=1)
-            hx711akt = int(hx711akt*1000)/1000       # 3 Dezimalstellen nach Komma
+            hx711akt = round(hx711akt*1000, 3)       # 3 Dezimalstellen nach Komma
             print('   HX711:  ', hx711akt, 'kg' )
             data['weight_kg'] = hx711akt
         ms_hx_read = perf.read_ms() - ms_bme_read
@@ -229,7 +229,7 @@ def start_measurement():
         # print('   Daten an SD-Karte')
         if _csv is not None:
             # _csv.add_dict(data)
-            _csv.add_data_didi(data)
+            _csv.add_data_didi(data, _config.get_value('general', 'general', 'plt'))
         ms_log_data = perf.read_ms() - ms_ds_read
 
         # Trying to reconnect to wifi if possible:

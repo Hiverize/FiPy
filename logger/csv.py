@@ -111,7 +111,7 @@ class CSV_logger:
         print("Wrote {} lines to csv at {}".format(len(data_list), full_time_string))
 
     """ Datenfile yyyy-mm-dd.csv mit time, value1, ... value10               """
-    def add_data_didi(self, data):
+    def add_data_didi(self, data, plt):
         date_string = self.get_date()
         time_string = self.get_time()
         hour_string = self.get_hour()
@@ -192,31 +192,33 @@ class CSV_logger:
             # f.write("".join(data_list))
             f.write("".join(test_list))
         print('  Datei:   Daten in {}'.format(file_path))
+
         # Plotfile für gnuplot yyyy-mm-dd.plt erzeugen
-        file_path = self.dir + "/" + date_string +  ".plt"
-        try:
-            f = open(file_path, 'r')
-            f.close()
-        except OSError:
-            f = open(file_path, 'w')
-            # f.write('# Plotfile  2020-02-08.plt am 08.02.2020 um 00:00:00 \n')
-            text = '# Plotfile  ' + file_path + ' am ' + self.get_date() + ' ab ' + self.get_time() + ' \n'
-            f.write(text)
-            text = 'DATAFILE = "' + self.get_date() + '.csv" \n'
-            f.write(text)
-            text = 'TITLE    = "Messdaten der BOB-Bienenbeute' + ' am ' + self.get_date() + ' ab ' + self.get_time() + '" \n'
-            f.write(text)
-            f.write('load       "PlotBOB.plt" \n')
-            f.write('       \n')
-            f.write('# exit \n')
-            f.write('pause -1 "Details Gewicht"         \n')
-            f.write('set xrange ["10:00:00":"12:00:00"] \n')
-            f.write('set yrange [0:10] \n')
-            f.write('replot \n')
-            f.write('       \n')
-            f.write('pause -1 "Details Temperatur"      \n')
-            f.write('set xrange ["10:00:00":"12:00:00"] \n')
-            f.write('set yrange [15:25] \n')
-            f.write('replot \n')
-            f.close()
-            print("   Logging measurements to " + file_path)
+        if plt:
+            file_path = self.dir + "/" + date_string +  ".plt"
+            try:
+                f = open(file_path, 'r')
+                f.close()
+            except OSError:
+                f = open(file_path, 'w')
+                # f.write('# Plotfile  2020-02-08.plt am 08.02.2020 um 00:00:00 \n')
+                text = '# Plotfile  ' + file_path + ' am ' + self.get_date() + ' ab ' + self.get_time() + ' \n'
+                f.write(text)
+                text = 'DATAFILE = "' + self.get_date() + '.csv" \n'
+                f.write(text)
+                text = 'TITLE    = "Messdaten der BOB-Bienenbeute' + ' am ' + self.get_date() + ' ab ' + self.get_time() + '" \n'
+                f.write(text)
+                f.write('load       "PlotBOB.plt" \n')
+                f.write('       \n')
+                f.write('# exit \n')
+                f.write('pause -1 "Details Gewicht"         \n')
+                f.write('set xrange ["10:00:00":"12:00:00"] \n')
+                f.write('set yrange [0:10] \n')
+                f.write('replot \n')
+                f.write('       \n')
+                f.write('pause -1 "Details Temperatur"      \n')
+                f.write('set xrange ["10:00:00":"12:00:00"] \n')
+                f.write('set yrange [15:25] \n')
+                f.write('replot \n')
+                f.close()
+                print("   Logging measurements to " + file_path)
