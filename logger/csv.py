@@ -133,46 +133,46 @@ class CSV_logger:
         if 't' in data:
             test_list = test_list +  str(data['t']) + ', '
         else:
-            test_list = test_list + 'NA, '
+            test_list = test_list + ', '
         if 'p' in data:
             test_list = test_list +  str(data['p']) + ', '
         else:
-            test_list = test_list + 'NA, '
+            test_list = test_list + ', '
         if 'h' in data:
             test_list = test_list +  str(data['h']) + ', '
         else:
-            test_list = test_list + 'NA, '
+            test_list = test_list + ', '
         if 'weight_kg' in data:
             test_list = test_list +  str(data['weight_kg']) + ',  '
         else:
-            test_list = test_list + 'NA,  '
+            test_list = test_list + ',  '
 
         if 't_i_1' in data:
             # t1  = data['t_i_1']    # t1s = ("{:5.1f}".format(t1))
             test_list = test_list +  str(data['t_i_1']) + ', '
         else:
-            test_list = test_list + 'NA, '
+            test_list = test_list + ', '
 #        print('add_data 3')
         if 't_i_2' in data:
             test_list = test_list +  str(data['t_i_2']) + ', '
         else:
-            test_list = test_list + 'NA, '
+            test_list = test_list + ', '
         if 't_i_3' in data:
             test_list = test_list +  str(data['t_i_3']) + ', '
         else:
-            test_list = test_list + 'NA, '
+            test_list = test_list + ', '
         if 't_i_4' in data:
             test_list = test_list +  str(data['t_i_4']) + ', '
         else:
-            test_list = test_list + 'NA, '
+            test_list = test_list + ', '
         if 't_i_5' in data:
             test_list = test_list +  str(data['t_i_5']) + ', '
         else:
-            test_list = test_list + 'NA, '
+            test_list = test_list + ', '
         if 't_o'   in data:
             test_list = test_list +  str(data['t_o']) + ', '
         else:
-            test_list = test_list + 'NA, '
+            test_list = test_list + ', '
 
         test_list = test_list     + ' \n'
         print('   SD-Card:', test_list, end = ' ')
