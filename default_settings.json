@@ -65,7 +65,7 @@
         "general": {
             "button_ap_enabled": true,
             "button_ap_pin": "P2",
-            "initial_time": 1556805688,
+            "initial_time": 946684800,
             "measurement_interval": 5,
             "until_wifi_reconnect" : 12,
             "oled": false,
