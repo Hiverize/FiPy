@@ -38,7 +38,7 @@ pycom.rgbled(0x111100)
 ###############################################################################
 
 if not pycom.wifi_on_boot():
-    pycom.wifi_on_boot(False)
+    pycom.wifi_on_boot(True)
 
 ###############################################################################
 # Finished boot process                                                       #
