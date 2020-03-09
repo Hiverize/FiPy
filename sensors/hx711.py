@@ -91,8 +91,14 @@ class HX711:
             self.time_constant = time_constant
 
     def power_down(self):
+        state = disable_irq()
         self.pSCK.value(False)
         self.pSCK.value(True)
-
+        utime.sleep_us(80)
+        enable_irq(state)
+        # Hold level to HIGH, even during deep/light sleep.
+        self.pSCK.hold(True)
+        
     def power_up(self):
+        self.pSCK.hold(False)
         self.pSCK.value(False)
