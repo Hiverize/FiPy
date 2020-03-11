@@ -114,12 +114,15 @@ def start_measurement():
         data = {}
 
         #read RSSI
-        try:
-            #wlan = network.WLAN(mode=network.WLAN.STA)
-            data['rssi']= _wlan.joined_ap_info().rssi
-        except:
+        if _config.get_value('networking', 'wlan', 'enabled'):
+            try:
+                wlan = network.WLAN(mode=network.WLAN.STA)
+                data['rssi']= wlan.joined_ap_info().rssi
+            except:
+                data['rssi']= 0
+                pass
+        else:
             data['rssi']= 0
-            pass
 
         # Start DS1820 conversion
         if ds1820 is not None:
@@ -293,9 +296,9 @@ def start_measurement():
         wdt.feed()
 
         if time_until_measurement > 0:
-            rgb_led(0x080800)
+            hx711.power_down()
             time.sleep_ms(int(time_until_measurement))
-
+            hx711.power_up()
 
 def ap_already_enabled():
     log("Already trying to enable AP.")
@@ -340,24 +343,26 @@ def send_sd(pin=None):
 
 
 ###### run this ####### 13, 16
+if _config.get_value('networking', 'wlan', 'enabled'):
+    # Initial SSID scan
+    no_ssids = _wm.scan()
+    log("{:d} SSIDS found".format(no_ssids))
 
-# Initial SSID scan
-no_ssids = _wm.scan()
-log("Start -> {:d} SSIDS found".format(no_ssids))
+    # init time
+    try:
+        rtc = machine.RTC()
+        rtc.init(time.gmtime(_config.get_value('general', 'general', 'initial_time')))
+    except:
+        log("Time init failed")
+        rtc.init(time.gmtime(1556805688))
 
-# init time
-try:
-    rtc = machine.RTC()
-    rtc.init(time.gmtime(_config.get_value('general', 'general', 'initial_time')))
-except:
-    log("Time init failed")
-    rtc.init(time.gmtime(1556805688))
+    log("AP SSID: {}".format(_config.get_value('networking', 'accesspoint', 'ssid')))
+else:
+    log("WLan disabled = Skip SSID scan ")
 
-log("Start -> AP SSID: {}".format(_config.get_value('networking', 'accesspoint', 'ssid')))
-log("Start -> Cause of restart: {}".format(reset_causes[machine.reset_cause()]))
-
-log("Start -> switching to ap mode is now possible")
-rgb_led(0x002000)
+log("Cause of : {}".format(reset_causes[machine.reset_cause()]))
+log("switching to ap mode is now possible")
+pycom.rgbled(0x007f00)
 if _config.get_value('general', 'general', 'button_ap_enabled'):
     button_ap = machine.Pin(_config.get_value('general', 'general', 'button_ap_pin'),
                             mode=machine.Pin.IN,
