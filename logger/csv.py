@@ -17,7 +17,7 @@ class CSV_logger:
             os.listdir(dir)
         except OSError:
             os.mkdir(dir)
-        print("Initialised CSV logger in directory " +dir)
+        print("Init -> CSV logger in directory " +dir)
 
     def list_files(self):
         return os.listdir(self.dir)
@@ -35,10 +35,32 @@ class CSV_logger:
     def get_time_string(self):
         # Get Time
         write_time = time.time()
+        write_time     += 3600
         datetime_list = time.localtime(write_time)
         date_string = "{:4d}-{:02d}-{:02d}H{:02d}".format(*datetime_list[0:4])
         datetime_string = "{:4d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(*datetime_list[0:6])
         return date_string, datetime_string
+
+    def get_date(self):
+        write_time = time.time()
+        write_time     += 3600                                  # UTC + 1 Stunde
+        datetime_list = time.localtime(write_time)
+        date_string = "{:4d}-{:02d}-{:02d}".format(*datetime_list[0:3])
+        return date_string
+
+    def get_time(self):
+        write_time = time.time()
+        write_time     += 3600                                  # UTC + 1 Stunde
+        datetime_list = time.localtime(write_time)
+        time_string = "{:02d}:{:02d}:{:02d}".format(*datetime_list[3:6])
+        return time_string
+
+    def get_hour(self):
+        write_time = time.time()
+        write_time     += 3600                                  # UTC + 1 Stunde
+        datetime_list = time.localtime(write_time)
+        time_string = "{:02d}".format(*datetime_list[3:4])
+        return time_string
 
     def add(self, sensor, value):
         time_string, full_time_string = self.get_time_string()
@@ -135,3 +157,5 @@ class CSV_logger:
         with open(file_path, 'a') as f:
             f.write(full_string)
         print("Wrote 1 line to csv at {}".format(full_time_string))
+
+    
