@@ -325,7 +325,7 @@ def enable_ap(pin=None):
 
 def send_sd(pin=None):
     #button_send.callback(handler=send_already_enabled)
-    global wdt, _csv, _influx, _wm
+    global wdt, _csv, _influx, _wm, _config
     log("Trying to send data stored on .")
     print("Called. Pin {}.".format(pin))
     wdt.init(timeout=10*60*1000)
@@ -334,15 +334,6 @@ def send_sd(pin=None):
     log("wlan scan")
     no_ssids = _wm.scan()
     log("{:d} SSIDS found".format(no_ssids))
-
-    # init time
-    log("init time")
-    try:
-        rtc = machine.RTC()
-        rtc.init(time.gmtime(_config.get_value('general', 'general', 'initial_time')))
-    except:
-        log("Time init failed")
-        rtc.init(time.gmtime(1556805688))
 
     _wm.enable_client()
     _beep = logger.beep
@@ -354,18 +345,28 @@ def send_sd(pin=None):
             rtc.ntp_sync("pool.ntp.org")
         except:
             pass
+    _config.set_value('general', 'general', 'initial_time', time.time())
 
     for file in _csv.list_files(subdir = "influx"):
         print(file)
         content = _csv.read_file("influx/"+file)
         print(content)
-        _influx.send(content)
+        sent = _influx.send(content)
+        if sent:
+            _csv.remove_file("influx/"+file)
     time.sleep_ms(1000)
     machine.reset()
 
     #button_send.callback(handler=send_sd)
 
 
+# init time
+try:
+    rtc = machine.RTC()
+    rtc.init(time.gmtime(_config.get_value('general', 'general', 'initial_time')))
+except:
+    log("Time init failed")
+    rtc.init(time.gmtime(1556805688))
 
 
 ###### run this ####### 13, 16
@@ -373,14 +374,6 @@ if _config.get_value('networking', 'wlan', 'enabled'):
     # Initial SSID scan
     no_ssids = _wm.scan()
     log("{:d} SSIDS found".format(no_ssids))
-
-    # init time
-    try:
-        rtc = machine.RTC()
-        rtc.init(time.gmtime(_config.get_value('general', 'general', 'initial_time')))
-    except:
-        log("Time init failed")
-        rtc.init(time.gmtime(1556805688))
 
     log("AP SSID: {}".format(_config.get_value('networking', 'accesspoint', 'ssid')))
 else:

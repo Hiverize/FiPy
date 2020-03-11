@@ -31,6 +31,15 @@ class CSV_logger:
         f.close()
         return content
 
+    def remove_file(self, file):
+        path = "{}/{}".format(self.dir,file)
+        print("trying to remove file" +path)
+        try:
+            os.remove(path)
+            print("Removed file")
+        except:
+            print("Failed to remove file")
+
 
 
     def get_time_string(self):
