@@ -235,7 +235,8 @@ def start_measurement():
                 log(e)
                 #_csv.add_dict(data)
         log("log in lineprotocol")
-        _csv.add_dict_lineprotocol(data, _config.get_value('telemetry', 'beep', 'sensor_key'))
+        if _csv is not None:
+            _csv.add_dict_lineprotocol(data, _config.get_value('telemetry', 'beep', 'sensor_key'))
 
          # wlan reconnect here?
             # log('wlan not connected try to reconnect')
@@ -324,15 +325,40 @@ def enable_ap(pin=None):
 
 def send_sd(pin=None):
     #button_send.callback(handler=send_already_enabled)
-    global wdt, _csv, _influx
-    log("Trying to send data stored on sd.")
+    global wdt, _csv, _influx, _wm
+    log("Trying to send data stored on .")
     print("Called. Pin {}.".format(pin))
     wdt.init(timeout=10*60*1000)
     loop_run = False
-    for file in _csv.list_files():
+
+    log("wlan scan")
+    no_ssids = _wm.scan()
+    log("{:d} SSIDS found".format(no_ssids))
+
+    # init time
+    log("init time")
+    try:
+        rtc = machine.RTC()
+        rtc.init(time.gmtime(_config.get_value('general', 'general', 'initial_time')))
+    except:
+        log("Time init failed")
+        rtc.init(time.gmtime(1556805688))
+
+    _wm.enable_client()
+    _beep = logger.beep
+    _influx = logger.influx
+
+    # add to time server
+    if _wlan.mode() == network.WLAN.STA and _wlan.isconnected():
+        try:
+            rtc.ntp_sync("pool.ntp.org")
+        except:
+            pass
+
+    for file in _csv.list_files(subdir = "influx"):
         print(file)
-        content = _csv.read_file(file)
-        #print(content)
+        content = _csv.read_file("influx/"+file)
+        print(content)
         _influx.send(content)
     time.sleep_ms(1000)
     machine.reset()

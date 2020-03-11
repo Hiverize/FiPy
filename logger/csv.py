@@ -4,6 +4,7 @@ import time
 
 class CSV_logger:
     def __init__(self, dir="/sd/hiverizelog"):
+        print(dir)
         self.dir = dir
         # Mount SD
         # Pins are Dat0: P8, SCLK: P23, CMD: P4, at least I think so
@@ -14,13 +15,13 @@ class CSV_logger:
         # Check if directory, eg. hiverizelog, was already created,
         # and create it, if not existing:
         try:
-            os.listdir(dir)
+            os.listdir(self.dir)
         except OSError:
-            os.mkdir(dir)
+            os.mkdir(self.dir)
         print("Init -> CSV logger in directory " +dir)
 
-    def list_files(self):
-        return os.listdir(self.dir)
+    def list_files(self, subdir = ""):
+        return os.listdir(self.dir +"/" +subdir)
 
     def read_file(self, file):
         path = "{}/{}".format(self.dir,file)
@@ -34,7 +35,9 @@ class CSV_logger:
 
     def get_time_string(self):
         # Get Time
+        print("try to get time")
         write_time = time.time()
+        print("got time")
         write_time     += 3600
         datetime_list = time.localtime(write_time)
         date_string = "{:4d}-{:02d}-{:02d}H{:02d}".format(*datetime_list[0:4])
@@ -82,11 +85,15 @@ class CSV_logger:
         f.write("{}, {}, {}\n".format(full_time_string, sensor, value))
         f.close()
 
-    def log(self, log_text):
+    def log(self, log_text, dir = "logging"):
         print(log_text)
         time_string, full_time_string = self.get_time_string()
+        try:
+            os.listdir(self.dir + "/" +dir)
+        except OSError:
+            os.mkdir(self.dir + "/" +dir)
         # concat filepath
-        file_path = self.dir + "/logging.csv"
+        file_path = self.dir + "/" + dir +"/logging.csv"
         # Write header, if file did not exist before
         try:
             f = open(file_path, 'r')
@@ -123,7 +130,7 @@ class CSV_logger:
             f.write("".join(data_list))
         print("Wrote {} lines to csv at {}".format(len(data_list), full_time_string))
 
-    def add_dict_lineprotocol(self, data, sensor_key):
+    def add_dict_lineprotocol(self, data, sensor_key, dir = "influx"):
         print("in lineprotocol")
         # Get Time
         time_string, full_time_string = self.get_time_string()
@@ -143,8 +150,12 @@ class CSV_logger:
         # combine
         full_string = "{} {} {}\n".format(name_key, data_list, write_time)
 
+        try:
+            os.listdir(self.dir + "/" +dir)
+        except OSError:
+            os.mkdir(self.dir + "/" +dir)
         # concat filepath
-        file_path = self.dir + "/" +time_string + ".txt"
+        file_path = self.dir + "/" + dir +"/" +time_string + ".txt"
         # Write header, if file did not exist before
         try:
             f = open(file_path, 'r')
@@ -158,13 +169,17 @@ class CSV_logger:
             f.write(full_string)
         print("Wrote 1 line to csv at {}".format(full_time_string))
 
-      """ Datenfile yyyy-mm-dd.csv mit time, value1, ... value10               """
-    def add_data_didi(self, data, plt, cycle):
+    #Datenfile yyyy-mm-dd.csv mit time, value1, ... value10               """
+    def add_data_didi(self, data, plt, cycle, dir ="csv"):
         date_string = self.get_date()
         time_string = self.get_time()
         hour_string = self.get_hour()
-        file_path = self.dir + "/" + date_string +  "x" + hour_string +  ".csv"
-        file_path = self.dir + "/" + date_string +  ".csv"
+        try:
+            os.listdir(self.dir + "/" +dir)
+        except OSError:
+            os.mkdir(self.dir + "/" +dir)
+        #file_path = self.dir + "/ + date_string +  "x" + hour_string +  ".csv"
+        file_path = self.dir + "/" + dir +"/" + date_string +  ".csv"
         # Get Time
         time_string, full_time_string = self.get_time_string()
         # combine dict entries
