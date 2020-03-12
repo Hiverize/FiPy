@@ -42,6 +42,19 @@ class CSV_logger:
 
 
 
+    def list_files(self):
+        return os.listdir(self.dir)
+
+    def read_file(self, file):
+        path = "{}/{}".format(self.dir,file)
+        print(path)
+        f = open(path)
+        content = f.read()
+        f.close()
+        return content
+
+
+
     def get_time_string(self):
         # Get Time
         print("try to get time")

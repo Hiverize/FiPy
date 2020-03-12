@@ -2,7 +2,7 @@
 import gc
 import logger
 import machine
-from machine import Pin, I2C
+from machine import Pin, I2C, sleep
 import micropython
 import network
 import pycom
@@ -297,8 +297,11 @@ def start_measurement():
         wdt.feed()
 
         if time_until_measurement > 0:
+            #time.sleep_ms(int(time_until_measurement))
+            pycom.rgbled(0x000000)
             hx711.power_down()
-            time.sleep_ms(int(time_until_measurement))
+            sleep (int(time_until_measurement))
+            pycom.rgbled(0x000800)
             hx711.power_up()
 
 def ap_already_enabled():
@@ -360,13 +363,6 @@ def send_sd(pin=None):
     #button_send.callback(handler=send_sd)
 
 
-# init time
-try:
-    rtc = machine.RTC()
-    rtc.init(time.gmtime(_config.get_value('general', 'general', 'initial_time')))
-except:
-    log("Time init failed")
-    rtc.init(time.gmtime(1556805688))
 
 
 ###### run this ####### 13, 16
@@ -396,6 +392,13 @@ if _config.get_value('general', 'general', 'button_send_enabled'):
     button_send.callback(machine.Pin.IRQ_RISING,
                    handler=send_sd)
 
+
+try:
+    rtc = machine.RTC()
+    rtc.init(time.gmtime(_config.get_value('general', 'general', 'initial_time')))
+except:
+    log("Time init failed")
+    rtc.init(time.gmtime(1556805688))
 
 log("Start -> Starting measurement setup...")
 wdt.feed()

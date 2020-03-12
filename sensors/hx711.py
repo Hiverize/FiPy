@@ -3,6 +3,7 @@
 # No license specified as of 08/03/2019
 
 from machine import Pin, enable_irq, disable_irq, idle
+import utime
 
 class HX711:
     def __init__(self, dout, pd_sck, gain=128):
@@ -91,8 +92,14 @@ class HX711:
             self.time_constant = time_constant
 
     def power_down(self):
+        state = disable_irq()
         self.pSCK.value(False)
         self.pSCK.value(True)
+        utime.sleep_us(80)
+        enable_irq(state)
+        # Hold level to HIGH, even during deep/light sleep.
+        self.pSCK.hold(True)
 
     def power_up(self):
+        self.pSCK.hold(False)
         self.pSCK.value(False)

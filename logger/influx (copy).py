@@ -10,7 +10,7 @@ class Influx:
         print("Trying to send file.")
         try:
             response = urequests.post(
-                'insert_address_here',
+                'http://134.102.219.159:8086/write?db=bee_data&u=kamerun&p=ngaoundere',
                 data=file)
             print("printing response:")
             print(response)
