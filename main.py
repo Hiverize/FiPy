@@ -343,9 +343,13 @@ def send_sd(pin=None):
     if _wlan.mode() == network.WLAN.STA and _wlan.isconnected():
         try:
             rtc.ntp_sync("pool.ntp.org")
+            log("linked to rtc server")
         except:
+            log("could not link to rtc server")
             pass
+    log(time.time())
     _config.set_value('general', 'general', 'initial_time', time.time())
+    _config.write()
 
     for file in _csv.list_files(subdir = "influx"):
         print(file)
