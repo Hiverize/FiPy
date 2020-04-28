@@ -30,21 +30,21 @@ class CSV_logger:
 
     def get_date(self):
         write_time = time.time()
-        write_time     += 3600                                  # UTC + 1 Stunde
+        write_time     += 3600                                  # UTC + 1 hour
         datetime_list = time.localtime(write_time)
         date_string = "{:4d}-{:02d}-{:02d}".format(*datetime_list[0:3])
         return date_string
 
     def get_time(self):
         write_time = time.time()
-        write_time     += 3600                                  # UTC + 1 Stunde
+        write_time     += 3600                                  # UTC + 1 hour
         datetime_list = time.localtime(write_time)
         time_string = "{:02d}:{:02d}:{:02d}".format(*datetime_list[3:6])
         return time_string
 
     def get_hour(self):
         write_time = time.time()
-        write_time     += 3600                                  # UTC + 1 Stunde
+        write_time     += 3600                                  # UTC + 1 hour
         datetime_list = time.localtime(write_time)
         time_string = "{:02d}".format(*datetime_list[3:4])
         return time_string
@@ -110,7 +110,7 @@ class CSV_logger:
             f.write("".join(data_list))
         print("Wrote {} lines to csv at {}".format(len(data_list), full_time_string))
 
-    """ Datenfile yyyy-mm-dd.csv mit time, value1, ... value10               """
+    """ Date file yyyy-mm-dd.csv with time, value1, ... value10               """
     def add_data_didi(self, data, plt, cycle):
         date_string = self.get_date()
         time_string = self.get_time()
@@ -189,9 +189,9 @@ class CSV_logger:
         with open(file_path, 'a') as f:
             # f.write("".join(data_list))
             f.write("".join(test_list))
-        print('  Datei:   Daten in {}'.format(file_path))
+        print('  File:   Data in {}'.format(file_path))
 
-        # Plotfile für gnuplot yyyy-mm-dd.plt erzeugen
+        # Generate plotfile for gnuplot yyyy-mm-dd.plt
         if plt:
             file_path = self.dir + "/" + date_string +  ".plt"
             try:
@@ -199,22 +199,22 @@ class CSV_logger:
                 f.close()
             except OSError:
                 f = open(file_path, 'w')
-                # f.write('# Plotfile  2020-02-08.plt am 08.02.2020 um 00:00:00 \n')
-                text = '# Plotfile  ' + file_path + ' am ' + self.get_date() + ' ab ' + self.get_time() + ' \n'
+                # f.write('# Plotfile  2020-02-08.plt on 08.02.2020 at 00:00:00 \n')
+                text = '# Plotfile  ' + file_path + ' on ' + self.get_date() + ' at ' + self.get_time() + ' \n'
                 f.write(text)
                 text = 'DATAFILE = "' + self.get_date() + '.csv" \n'
                 f.write(text)
-                text = 'TITLE    = "Messdaten der BOB-Bienenbeute' + ' am ' + self.get_date() + ' ab ' + self.get_time() + '" \n'
+                text = 'TITLE    = "measured data of BOB-Bienenbeute' + ' on ' + self.get_date() + ' at ' + self.get_time() + '" \n'
                 f.write(text)
                 f.write('load       "PlotBOB.plt" \n')
                 f.write('       \n')
                 f.write('# exit \n')
-                f.write('pause -1 "Details Gewicht"         \n')
+                f.write('pause -1 "detailed weight"         \n')
                 f.write('set xrange ["10:00:00":"12:00:00"] \n')
                 f.write('set yrange [0:10] \n')
                 f.write('replot \n')
                 f.write('       \n')
-                f.write('pause -1 "Details Temperatur"      \n')
+                f.write('pause -1 "detailed temperatur"      \n')
                 f.write('set xrange ["10:00:00":"12:00:00"] \n')
                 f.write('set yrange [15:25] \n')
                 f.write('replot \n')

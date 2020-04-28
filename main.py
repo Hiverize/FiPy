@@ -104,7 +104,7 @@ def start_measurement():
 
     while loop_run:
         cycle = cycle + 1
-        text = str(cycle) + ". Messung"
+        text = str(cycle) + ". Measurement"
         log(text)
         # start time measuring
         perf.start()
@@ -126,7 +126,7 @@ def start_measurement():
             if roms:
                 ds1820.convert_temp()
                 time.sleep_ms(750)
-                print('   DS18B20: Messung gestartet...')
+                print('   DS18B20: Measurement started...')
             else:
                 print("No DS1820 found. Is it connected properly?")
         ms_conversion_start = perf.read_ms()
@@ -134,8 +134,8 @@ def start_measurement():
         # Read data from BME280
         if bme280 is not None:
             try:
-                bme280val = bme280.read_compensated_data()      # auslesen BME280
-                bme280tmp = round(bme280val[0],2)            # 2 Stellen nach Komma
+                bme280val = bme280.read_compensated_data()      # read BME280
+                bme280tmp = round(bme280val[0],2)            # 2 decimal places
                 bme280pre = int(round(bme280val[1]/100,0))
                 bme280hum = round(bme280val[2],2)
                 print('   BME280: ', bme280tmp, 'C', bme280pre, 'mbar', bme280hum, '%')
@@ -149,7 +149,7 @@ def start_measurement():
         # Read data from HX711
         if hx711 is not None:
             hx711akt = hx711.get_value(times=1)
-            hx711akt = round(hx711akt, 3)       # 3 Dezimalstellen nach Komma
+            hx711akt = round(hx711akt, 3)       # 3 decimal places
             print('   HX711:  ', hx711akt, 'kg' )
             data['weight_kg'] = hx711akt
         ms_hx_read = perf.read_ms() - ms_bme_read
@@ -174,18 +174,18 @@ def start_measurement():
             data.update(ds_data)
             print(' ')
         ms_ds_read = perf.read_ms() - ms_hx_read
-        #Ermitteln und Ausgabe der Zeit
+        # Determine and display the time
         write_time = time.time()
-        write_time = write_time + 3600                          # UTC + 1 Stunde
+        write_time = write_time + 3600                          # UTC + 1 hour
         datetime_list = time.localtime(write_time)
         datetime_string = "{:4d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(*datetime_list[0:6])
         time_string = "{:02d}:{:02d}:{:02d}".format(*datetime_list[3:6])
-        print('   Zeiten: ', end=' ')
+        print('   Time: ', end=' ')
         print(time_string, end=' ')
 
         if oled:
             try:
-                _oled.fill(0)                                         # alles aus
+                _oled.fill(0)                                         # all off
                 _oled.text(str(cycle),              0,  0)
                 _oled.text(time_string,            64,  0)
                 _oled.text("Waage           "   ,   0,  9)
@@ -213,9 +213,9 @@ def start_measurement():
                     _oled.text(str(data['t_i_5'])    ,  50, 54)
                 if 't_o' in data:
                     _oled.text(str(data['t_o'])      ,  95, 54)
-                _oled.show()                                         # anzeigen
+                _oled.show()                                         # show
             except:
-                print('OLED Fehler',end=' ')
+                print('OLED defect',end=' ')
 
         print('   WLAN:   ', end = ' ')
         # Log measured values, if possible
@@ -225,8 +225,8 @@ def start_measurement():
                 and _beep is not None):
             _beep.add(data)
         log(data)
-        """ Daten auf SD-Karte """
-        # print('   Daten an SD-Karte')
+        """ Data on SD-Card """
+        # print('   Data on SD-Card')
         if _csv is not None:
             # _csv.add_dict(data)
             _csv.add_data_didi(data, _config.get_value('general', 'general', 'plt'), cycle)
