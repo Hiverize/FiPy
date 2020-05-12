@@ -171,7 +171,7 @@ def start_measurement():
         if ds1820 is not None:
             print('   DS18B20:', end=' ')
             ds_data = ds1820.read_all(_ds_positions)
-            if ds_data == {}:
+            if len(ds_data) < len(_config.get_value('sensors', 'ds1820', 'positions')):
                 print("Can not write ds1820 data on SD-Card. Caused by not declared ds1820s positions.")
             data.update(ds_data)
             print(' ')
