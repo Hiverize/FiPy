@@ -3,6 +3,7 @@ import machine
 import network
 import time
 import sys
+import pycom
 
 from config import Config
 
@@ -11,6 +12,13 @@ class WLanManager():
     def __init__(self, config):
         self.config = config
         self.wlan = network.WLAN()
+
+    def rgb_led(self, rgb):
+        if not (
+            self.config.get_value("general", "general", "button_ap_enabled")
+            and self.config.get_value("general", "general", "button_ap_pin") == 2
+        ):
+            pycom.rgbled(rgb)
 
     def configure_antenna(self):
         # https://community.hiveeyes.org/t/signalstarke-des-wlan-reicht-nicht/2541/11
@@ -66,8 +74,12 @@ class WLanManager():
         password = self.config.get_value('networking', 'accesspoint', 'password')
         encryption = self.config.get_value('networking', 'accesspoint', 'encryption')
         channel = self.config.get_value('networking', 'accesspoint', 'channel')
+        print("Access Point starting...")
+        print("SSID: {ssid}\nPassword: {pwd}\nEncryption: {enc}\nChannel: {ch}".format(
+            ssid=ssid, pwd=password, enc=encryption, ch=channel))
 
         try:
+            self.rgb_led(0x000010)
             self.wlan.deinit()
             time.sleep(1)
             self.wlan.init(mode=mode,
@@ -89,6 +101,9 @@ class WLanManager():
             raise
         else:
             time.sleep(5)
+            self.rgb_led(0x000020)
+            print("Access Point '{0}' started for 10 minutes.".format(ssid))
+
 
     def _enable_client(self):
 
@@ -153,4 +168,6 @@ class WLanManager():
                 print("WLan connection failed, retry...")
             else:
                 if self.wlan.mode() == network.WLAN.STA and self.wlan.isconnected():
+                    print("WLan connected successfully!")
+                    print(self.wlan.ifconfig())
                     return

@@ -5,7 +5,7 @@ import machine
 from machine import Pin, I2C
 import micropython
 import network
-import pycom
+from pycom import rgbled
 import sys
 import time
 import uos
@@ -13,12 +13,10 @@ import uos
 # own code imports
 import webserver
 from config import Config
-from sensors import hx711, bme280
-import sensors.ssd1306
+from sensors import hx711, bme280, ssd1306, ds1820
 from wlanmanager import WLanManager
 
-from lib.onewire     import OneWire
-from sensors.ds18x20 import DS18X20
+from lib.onewire import OneWire
 
 
 print('Start -> logger')
@@ -33,9 +31,11 @@ def log(message):
 
 # Change color of LED only if P2 not in Use for AP
 def rgb_led(rgb):
-    if not(_config.get_value('general', 'general', 'button_ap_enabled')
-       and _config.get_value('general', 'general', 'button_ap_pin')==2):
-        pycom.rgbled(rgb)
+    if not (
+        _config.get_value("general", "general", "button_ap_enabled")
+        and _config.get_value("general", "general", "button_ap_pin") == 2
+    ):
+        rgbled(rgb)
 
 # needed for boards without buttons
 reset_causes = {
@@ -67,27 +67,29 @@ crcerrcnt = 0
 oled = _config.get_value('general', 'general', 'oled')
 if oled:
     i2c = I2C(0, I2C.MASTER, pins=('P9', 'P10'))       # PyCom FiPy
-    _oled = sensors.ssd1306.SSD1306_I2C(128, 64, i2c)           # x, y, bus
+    _oled = SSD1306_I2C(128, 64, i2c)           # x, y, bus
     _oled.fill(0)
     _oled.show()
-
-# DS18B20 new
-if _config.get_value('sensors', 'ds1820', 'enabled'):
-    owPin  = _config.get_value('sensors', 'ds1820', 'pin')
-    ow     = OneWire(Pin(owPin))
-    ds1820 = DS18X20(ow)
-    roms   = ds1820.scan()
-else:
-    ds1820 = None
 
 
 print('Start -> Info:', end = ' ')
 log(uos.uname())
 
 
+def register_ap_button_callback():
+    if _config.get_value('general', 'general', 'button_ap_enabled'):
+        global button_ap
+        ap_pin = _config.get_value('general', 'general', 'button_ap_pin')
+        button_ap = machine.Pin(ap_pin, mode=machine.Pin.IN, pull=machine.Pin.PULL_UP)
+        print("Access Point Pin {0} set.".format(ap_pin))
+        button_ap.callback(machine.Pin.IRQ_FALLING,
+                        handler=enable_ap)
+        print("Callback registered...")
+
 
 # start main measurement cycle
 def start_measurement():
+    register_ap_button_callback()
     global cycle, loop_run, crcerrcnt
 
     perf = machine.Timer.Chrono()
@@ -283,24 +285,25 @@ def start_measurement():
             time.sleep_ms(int(time_until_measurement))
 
 
-def ap_already_enabled():
-    log("Already trying to enable AP.")
+def ap_already_enabled(pin=None):
+    global button_ap
+    if button_ap() == 0:
+        print("Already trying to enable AP.")
 
 # enable ap
 def enable_ap(pin=None):
     global _wm, loop_run, _wlan, wdt, button_ap
     # if in button mode, make sure we don't enter this function again
     if _config.get_value('general', 'general', 'button_ap_enabled'):
-        button_ap.callback(handler=ap_already_enabled)
+        button_ap.callback(Pin.IRQ_FALLING, handler=ap_already_enabled)
         print("Called. Pin {}.".format(pin))
     wdt.init(timeout=10*60*1000)
     if not _wlan.mode() == network.WLAN.AP:
         loop_run = False
-        getattr(_wm, 'enable_ap')()
-        log("AP enabled")
-        rgb_led(0x000020)
+        _wm.enable_ap()
     if not webserver.mws.IsStarted():
         webserver.mws.Start(threaded=True)
+        print("Webserver started!")
 
 ###### run this #######
 
@@ -320,13 +323,7 @@ log("Start -> AP SSID: {}".format(_config.get_value('networking', 'accesspoint',
 log("Start -> Cause of restart: {}".format(reset_causes[machine.reset_cause()]))
 
 log("Start -> switching to ap mode is now possible")
-rgb_led(0x002000)
-if _config.get_value('general', 'general', 'button_ap_enabled'):
-    button_ap = machine.Pin(_config.get_value('general', 'general', 'button_ap_pin'),
-                            mode=machine.Pin.IN,
-                            pull=machine.Pin.PULL_UP)
-    button_ap.callback(machine.Pin.IRQ_RISING,
-                       handler=enable_ap)
+rgb_led(0x001000)
 
 
 log("Start -> Starting measurement setup...")
