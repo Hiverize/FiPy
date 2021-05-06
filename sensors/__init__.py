@@ -7,9 +7,8 @@ from config import Config
 #import sensors.ds18x20
 from lib.onewire     import OneWire
 from sensors.ds18x20 import DS18X20
-
-import sensors.bme280
-import sensors.hx711
+from sensors.bme280 import BME280
+from sensors.hx711 import HX711
 
 _config = Config()
 
@@ -67,7 +66,7 @@ else:
 #    ds1820 = None
 
 if _config.get_value('sensors', 'hx711', 'enabled'):
-    hx711 = sensors.hx711.HX711(
+    hx711 = HX711(
         _config.get_value('sensors', 'hx711', 'pin_dout'),
         _config.get_value('sensors', 'hx711', 'pin_pdsck')
     )
@@ -82,7 +81,7 @@ if _config.get_value('sensors','bme280', 'enabled'):
             _config.get_value('sensors','bme280', 'pin_sda'),
             _config.get_value('sensors','bme280', 'pin_scl')
         ))
-        bme280 = sensors.bme280.BME280(address=0x77, i2c=i2c)
+        bme280 = BME280(address=0x77, i2c=i2c)
     except:
         bme280 = None
         print("BME280 initialization failed. Is it connected properly?")
