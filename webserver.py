@@ -135,8 +135,3 @@ def get_logfile(httpClient, httpResponse):
     return httpResponse.WriteResponseJSONOk(
         obj=data,
         headers=_headers)
-
-print("in webserver.py")
-mws = MicroWebSrv()
-mws.SetNotFoundPageUrl("http://hiverize.wifi")
-MicroDNSSrv.Create({ '*' : '192.168.4.1' })

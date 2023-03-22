@@ -11,7 +11,6 @@ import time
 import uos
 
 # own code imports
-import webserver
 from config import Config
 from sensors import hx711, bme280, ssd1306, ds1820
 from wlanmanager import WLanManager
@@ -53,6 +52,7 @@ _ds_positions = {v: k for k, v in
                  _config.get_value('sensors', 'ds1820', 'positions').items()}
 _wm = WLanManager(_config)
 _wlan = network.WLAN(id=0)
+_mws = None
 
 
 measurement_interval = _config.get_value('general', 'general', 'measurement_interval')
@@ -290,9 +290,23 @@ def ap_already_enabled(pin=None):
     if button_ap() == 0:
         print("Already trying to enable AP.")
 
+
+def start_captive_portal():
+    global _mws
+    print("Starting captive portal")
+    from webserver import MicroWebSrv, MicroDNSSrv
+    if _mws is not None:
+        _mws = MicroWebSrv()
+        _mws.SetNotFoundPageUrl("http://hiverize.wifi")
+        MicroDNSSrv.Create({'*': '192.168.4.1'})
+    if not _mws.IsStarted():
+        _mws.Start(threaded=True)
+        print("Captive portal started")
+
+
 # enable ap
 def enable_ap(pin=None):
-    global _wm, loop_run, _wlan, wdt, button_ap
+    global _wm, loop_run, _wlan, _mws, wdt, button_ap
     # if in button mode, make sure we don't enter this function again
     if _config.get_value('general', 'general', 'button_ap_enabled'):
         button_ap.callback(Pin.IRQ_FALLING, handler=ap_already_enabled)
@@ -301,9 +315,11 @@ def enable_ap(pin=None):
     if not _wlan.mode() == network.WLAN.AP:
         loop_run = False
         _wm.enable_ap()
-    if not webserver.mws.IsStarted():
-        webserver.mws.Start(threaded=True)
-        print("Webserver started!")
+    try:
+        start_captive_portal()
+    except Exception as ex:
+        print("ERROR: Unable to start captive portal. Reason:", ex)
+
 
 ###### run this #######
 
